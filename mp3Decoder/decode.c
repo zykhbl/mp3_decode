@@ -12,26 +12,24 @@
 #include "decode.h"
 #include "huffman.h"
 
-void decode_info(Bit_stream_struc *bs, frame_params *fr_ps)
-{
+void decode_info(Bit_stream_struc *bs, frame_params *fr_ps) {
     layer *hdr = fr_ps->header;
     
     hdr->version = get1bit(bs);
-    hdr->lay = 4-getbits(bs,2);
+    hdr->lay = 4 - (int)getbits(bs, 2);
     hdr->error_protection = !get1bit(bs); /* error protect. TRUE/FALSE */
-    hdr->bitrate_index = getbits(bs,4);
-    hdr->sampling_frequency = getbits(bs,2);
+    hdr->bitrate_index = (int)getbits(bs, 4);
+    hdr->sampling_frequency = (int)getbits(bs, 2);
     hdr->padding = get1bit(bs);
     hdr->extension = get1bit(bs);
-    hdr->mode = getbits(bs,2);
-    hdr->mode_ext = getbits(bs,2);
+    hdr->mode = (int)getbits(bs, 2);
+    hdr->mode_ext = (int)getbits(bs, 2);
     hdr->copyright = get1bit(bs);
     hdr->original = get1bit(bs);
-    hdr->emphasis = getbits(bs,2);
+    hdr->emphasis = (int)getbits(bs, 2);
 }
 
-void III_get_side_info(Bit_stream_struc *bs, III_side_info_t *si, frame_params *fr_ps)
-{
+void III_get_side_info(Bit_stream_struc *bs, III_side_info_t *si, frame_params *fr_ps) {
     int ch, gr, i;
     int stereo = fr_ps->stereo;
     

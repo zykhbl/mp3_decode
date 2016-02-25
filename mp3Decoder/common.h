@@ -114,7 +114,7 @@ typedef struct {
 
 FILE *openTableFile(char *name);
 
-void WriteHdr(frame_params *fr_ps);
+void writeHdr(frame_params *fr_ps);
 
 void *mem_alloc(unsigned long block, char *item);
 void alloc_buffer(Bit_stream_struc *bs, int size);

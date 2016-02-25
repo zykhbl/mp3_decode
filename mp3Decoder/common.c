@@ -35,34 +35,24 @@ FILE *openTableFile(char *name) {
     return f;
 }
 
-
-void WriteHdr(frame_params *fr_ps)
-{
+void writeHdr(frame_params *fr_ps) {
     layer *info = fr_ps->header;
     
-    printf("HDR:  sync=FFF, id=%X, layer=%X, ep=%X, br=%X, sf=%X, pd=%X, ",
-           info->version, info->lay, !info->error_protection,
-           info->bitrate_index, info->sampling_frequency, info->padding);
+    printf("HDR:  sync=FFF, id=%X, layer=%X, ep=%X, br=%X, sf=%X, pd=%X, ", info->version, info->lay, !info->error_protection, info->bitrate_index, info->sampling_frequency, info->padding);
     
-    printf("pr=%X, m=%X, js=%X, c=%X, o=%X, e=%X\n",
-           info->extension, info->mode, info->mode_ext,
-           info->copyright, info->original, info->emphasis);
+    printf("pr=%X, m=%X, js=%X, c=%X, o=%X, e=%X\n", info->extension, info->mode, info->mode_ext, info->copyright, info->original, info->emphasis);
     
-    printf("layer=%s, tot bitrate=%d, sfrq=%.1f, mode=%s, ",
-           layer_names[info->lay-1], bitrate[info->lay-1][info->bitrate_index],
-           s_freq[info->sampling_frequency], mode_names[info->mode]);
+    printf("layer=%s, tot bitrate=%d, sfrq=%.1f, mode=%s, ", layer_names[info->lay-1], bitrate[info->lay-1][info->bitrate_index], s_freq[info->sampling_frequency], mode_names[info->mode]);
     
-    printf("sblim=%d, jsbd=%d, ch=%d\n",
-           fr_ps->sblimit, fr_ps->jsbound, fr_ps->stereo);
+    printf("sblim=%d, jsbd=%d, ch=%d\n", fr_ps->sblimit, fr_ps->jsbound, fr_ps->stereo);
 }
 
-void *mem_alloc(unsigned long block, char *item)
-{
+void *mem_alloc(unsigned long block, char *item) {
     void *ptr;
     ptr = (void *)malloc((unsigned long)block);
-    if (ptr != NULL)
+    if (ptr != NULL) {
         memset(ptr, 0, block);
-    else{
+    }else {
         printf("Unable to allocate %s\n", item);
         exit(0);
     }
@@ -131,8 +121,7 @@ void refill_buffer(Bit_stream_struc *bs) {
 int mask[8]={0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80};
 
 /*read 1 bit from the bit stream */
-unsigned int get1bit(Bit_stream_struc *bs)
-{
+unsigned int get1bit(Bit_stream_struc *bs) {
     unsigned int bit;
     register int i;
     
@@ -142,18 +131,19 @@ unsigned int get1bit(Bit_stream_struc *bs)
         bs->buf_bit_idx = 8;
         bs->buf_byte_idx--;
         if ((bs->buf_byte_idx < MINIMUM) || (bs->buf_byte_idx < bs->eob)) {
-            if (bs->eob)
+            if (bs->eob) {
                 bs->eobs = TRUE;
-            else {
-                for (i=bs->buf_byte_idx; i>=0;i--)
-                    bs->buf[bs->buf_size-1-bs->buf_byte_idx+i] = bs->buf[i];
+            } else {
+                for (i = bs->buf_byte_idx; i >= 0; i--) {
+                    bs->buf[bs->buf_size - 1 - bs->buf_byte_idx + i] = bs->buf[i];
+                }
                 refill_buffer(bs);
-                bs->buf_byte_idx = bs->buf_size-1;
+                bs->buf_byte_idx = bs->buf_size - 1;
             }
         }
     }
-    bit = bs->buf[bs->buf_byte_idx]&mask[bs->buf_bit_idx-1];
-    bit = bit >> (bs->buf_bit_idx-1);
+    bit = bs->buf[bs->buf_byte_idx] & mask[bs->buf_bit_idx - 1];
+    bit = bit >> (bs->buf_bit_idx - 1);
     bs->buf_bit_idx--;
     return(bit);
 }
@@ -228,25 +218,25 @@ int js_bound(int lay, int m_ext) {
         { 0, 4, 8, 16}
     };  /* lay+m_e -> jsbound */
     
-    if(lay<1 || lay >3 || m_ext<0 || m_ext>3) {
+    if(lay < 1 || lay > 3 || m_ext < 0 || m_ext > 3) {
         fprintf(stderr, "js_bound bad layer/modext (%d/%d)\n", lay, m_ext);
         exit(1);
     }
-    return(jsb_table[lay-1][m_ext]);
+    return(jsb_table[lay - 1][m_ext]);
 }
 
 /* interpret data in hdr str to fields in fr_ps */
-void hdr_to_frps(frame_params *fr_ps)
-{
+void hdr_to_frps(frame_params *fr_ps) {
     layer *hdr = fr_ps->header;     /* (or pass in as arg?) */
     
     fr_ps->actual_mode = hdr->mode;
     fr_ps->stereo = (hdr->mode == MPG_MD_MONO) ? 1 : 2;
     fr_ps->sblimit = SBLIMIT;
-    if(hdr->mode == MPG_MD_JOINT_STEREO)
+    if(hdr->mode == MPG_MD_JOINT_STEREO) {
         fr_ps->jsbound = js_bound(hdr->lay, hdr->mode_ext);
-    else
+    } else {
         fr_ps->jsbound = fr_ps->sblimit;
+    }
 }
 
 #define BUFSIZE 4096

@@ -15,8 +15,7 @@
 #include "common.h"
 #include "decode.h"
 
-int main(int argc, char**argv)
-{
+int main(int argc, char**argv) {
     char *mp3_filename = "/Users/weidong_wu/mp3_decode/mymp3.mp3";
     char *pcm_filename = "/Users/weidong_wu/mp3_decode/mypcm.wav";
     
@@ -62,14 +61,18 @@ int main(int argc, char**argv)
         //将fr_ps.header中的信息解读到fr_ps的相关域中
         hdr_to_frps(&fr_ps);
         //输出相关信息
-        if(frameNum == 0)
-            WriteHdr(&fr_ps);
+        if(frameNum == 0) {
+            writeHdr(&fr_ps);
+        }
+        
         printf("\r%05lu", frameNum++);
-        if (info.error_protection)
+        
+        if (info.error_protection) {
             buffer_CRC(&bs, &old_crc);
+        }
+        
         switch (info.lay) {
-            case 3:
-            {
+            case 3: {
                 int nSlots, main_data_end, flush_main;
                 int bytes_to_discard, gr, ch, ss, sb;
                 static int frame_start = 0;
