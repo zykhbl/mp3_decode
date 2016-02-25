@@ -162,7 +162,7 @@ void initialize_huffman()
     FILE *fi;
     
     if (huffman_initialized) return;
-    if (!(fi = OpenTableFile("huffdec.txt") )) {
+    if (!(fi = openTableFile("/Users/weidong_wu/mp3_decode/huffdec.txt") )) {
         printf("Please check huffman table 'huffdec.txt'\n");
         exit(1);
     }
@@ -793,7 +793,7 @@ void read_syn_window(double window[HAN_SIZE])
     double f[4];
     char t[150];
     
-    if (!(fp = OpenTableFile("dewindow.txt") )) {
+    if (!(fp = openTableFile("/Users/weidong_wu/mp3_decode/dewindow.txt") )) {
         printf("Please check synthesis window table 'dewindow.txt'\n");
         exit(1);
     }
@@ -867,35 +867,34 @@ int SubBandSynthesis (double *bandPtr, int channel, short *samples)
     return(clip);
 }
 
-void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, frame_params *fr_ps, int done, FILE *outFile, unsigned long *psampFrames)
-{
-    int i,j,l;
+void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, frame_params *fr_ps, int done, FILE *outFile, unsigned long *psampFrames) {
+    int i, j, l;
     int stereo = fr_ps->stereo;
-    int sblimit = fr_ps->sblimit;
     static short int outsamp[1600];
     static long k = 0;
     
-    if (!done)
-        for (i=0;i<num;i++) for (j=0;j<SBLIMIT;j++) {
-            (*psampFrames)++;
-            for (l=0;l<stereo;l++) {
-                if (!(k%1600) && k) {
-                    fwrite(outsamp,2,1600,outFile);
-                    k = 0;
+    if (!done) {
+        for (i = 0; i < num; i++) {
+            for (j = 0; j < SBLIMIT; j++) {
+                (*psampFrames)++;
+                for (l = 0; l < stereo; l++) {
+                    if (!(k % 1600) && k) {
+                        fwrite(outsamp, 2, 1600, outFile);
+                        k = 0;
+                    }
+                    outsamp[k++] = pcm_sample[l][i][j];
                 }
-                outsamp[k++] = pcm_sample[l][i][j];
             }
         }
-    else {
-        fwrite(outsamp,2,(int)k,outFile);
+    } else {
+        fwrite(outsamp, 2, (int)k, outFile);
         k = 0;
     }
 }
 
 
-void  buffer_CRC(Bit_stream_struc *bs, unsigned int *old_crc)
-{
-    *old_crc = getbits(bs, 16);
+void  buffer_CRC(Bit_stream_struc *bs, unsigned int *old_crc) {
+    *old_crc = (unsigned int)getbits(bs, 16);
 }
 
 

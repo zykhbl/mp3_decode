@@ -7,16 +7,21 @@
 //
 
 //http://www.pudn.com/downloads52/sourcecode/multimedia/mpeg/detail181910.html
+//http://www.codeforge.cn/read/187196/huffdec.txt__html
+//http://www.jianshu.com/p/1d1f893e53e9
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
 #include "decode.h"
 
-void main(int argc, char**argv)
+int main(int argc, char**argv)
 {
+    char *mp3_filename = "/Users/weidong_wu/mp3_decode/mymp3.mp3";
+    char *pcm_filename = "/Users/weidong_wu/mp3_decode/mypcm.wav";
+    
     FILE *musicout;
-    Bit_stream_struc  bs;
+    Bit_stream_struc bs;
     frame_params fr_ps;
     III_side_info_t III_side_info;
     III_scalefac_t III_scalefac;
@@ -24,7 +29,7 @@ void main(int argc, char**argv)
     layer info;
     int sync, clip;
     int done = FALSE;
-    unsigned long frameNum=0;
+    unsigned long frameNum = 0;
     unsigned long bitsPerSlot;
     unsigned long sample_frames;
     
@@ -32,19 +37,15 @@ void main(int argc, char**argv)
     PCM *pcm_sample;
     
     pcm_sample = (PCM *) mem_alloc((long) sizeof(PCM), "PCM Samp");
-    if (argc==1) {
-        printf("Useage:decode file.mp3 output.pcm\n");
-        return;
-    }
     
-    fr_ps.header = &info;
-    
-    if ((musicout = fopen(argv[2], "w+b")) == NULL) {
-        printf ("Could not create \"%s\".\n", argv[2]);
+    if ((musicout = fopen(pcm_filename, "w+b")) == NULL) {
+        printf ("Could not create \"%s\".\n", pcm_filename);
         exit(1);
     }
     
-    open_bit_stream_r(&bs, argv[1], BUFFER_SIZE);
+    open_bit_stream_r(&bs, mp3_filename, BUFFER_SIZE);
+    
+    fr_ps.header = &info;
     
     sample_frames = 0;
     while(!end_bs(&bs)) {
@@ -154,10 +155,12 @@ void main(int argc, char**argv)
                 exit(1);   
                 break;   
         }   
-    }   
+    }
+    
     close_bit_stream_r(&bs);   
     fclose(musicout);   
-    printf("\nDecoding done.\n");   
-    return;   
+    printf("\nDecoding done.\n");
+    
+    return 0;
 }
 

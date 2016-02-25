@@ -21,17 +21,17 @@ double  s_freq[4] = {44.1, 48, 32, 0};
 char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
 
 
-FILE *OpenTableFile(char *name)
-{
+FILE *openTableFile(char *name) {
     char fulname[80];
     FILE *f;
     
     fulname[0] = '\0';
     
     strcat(fulname, name);
-    if( (f=fopen(fulname,"r"))==NULL ) {
-        fprintf(stderr,"\nOpenTable: could not find %s\n", fulname);
+    if( (f = fopen(fulname,"r"))==NULL ) {
+        fprintf(stderr,"\nopenTable: could not find %s\n", fulname);
     }
+    
     return f;
 }
 
@@ -69,40 +69,34 @@ void *mem_alloc(unsigned long block, char *item)
     return ptr;
 }
 
-/*open and initialize the buffer; */
-void alloc_buffer(Bit_stream_struc *bs, int size)
-{
-    bs->buf = (unsigned char *) mem_alloc(size*sizeof(unsigned char), "buffer");
+/* open and initialize the buffer */
+void alloc_buffer(Bit_stream_struc *bs, int size) {
+    bs->buf = (unsigned char *) mem_alloc(size * sizeof(unsigned char), "buffer");
     bs->buf_size = size;
 }
 
-void desalloc_buffer(Bit_stream_struc *bs)
-{
+void desalloc_buffer(Bit_stream_struc *bs) {
     free(bs->buf);
 }
 
 /* open the device to read the bit stream from it */
-void open_bit_stream_r(Bit_stream_struc *bs, char *bs_filenam, int size)
-{
-    register unsigned char flag = 1;
-    
+void open_bit_stream_r(Bit_stream_struc *bs, char *bs_filenam, int size) {
     if ((bs->pt = fopen(bs_filenam, "rb")) == NULL) {
         printf("Could not find \"%s\".\n", bs_filenam);
         exit(1);
     }
-    
-    bs->format = BINARY;
+
     alloc_buffer(bs, size);
-    bs->buf_byte_idx=0;
-    bs->buf_bit_idx=0;
-    bs->totbit=0;
+    bs->buf_byte_idx = 0;
+    bs->buf_bit_idx = 0;
+    bs->totbit = 0;
     bs->mode = READ_MODE;
     bs->eob = FALSE;
     bs->eobs = FALSE;
+    bs->format = BINARY;
 }
 
-void close_bit_stream_r(Bit_stream_struc *bs)
-{
+void close_bit_stream_r(Bit_stream_struc *bs) {
     fclose(bs->pt);
     desalloc_buffer(bs);
 }
@@ -110,28 +104,26 @@ void close_bit_stream_r(Bit_stream_struc *bs)
 /*return the status of the bit stream*/
 /* returns 1 if end of bit stream was reached */
 /* returns 0 if end of bit stream was not reached */
-int end_bs(Bit_stream_struc *bs)
-{
+int end_bs(Bit_stream_struc *bs) {
     return(bs->eobs);
 }
 
 
 /*return the current bit stream length (in bits)*/
-unsigned long sstell(Bit_stream_struc *bs)
-{
+unsigned long sstell(Bit_stream_struc *bs) {
     return(bs->totbit);
 }
 
 
-void refill_buffer(Bit_stream_struc *bs)
-{
-    register int i=bs->buf_size-2-bs->buf_byte_idx;
-    register unsigned long n=1;
+void refill_buffer(Bit_stream_struc *bs) {
+    register int i = bs->buf_size - 2 - bs->buf_byte_idx;
+    register unsigned long n = 1;
     
-    while ((i>=0) && (!bs->eob)) {
-        n=fread(&bs->buf[i--], sizeof(unsigned char), 1, bs->pt);
-        if (!n)
-            bs->eob= i+1;
+    while ((i >= 0) && (!bs->eob)) {
+        n = fread(&bs->buf[i--], sizeof(unsigned char), 1, bs->pt);
+        if (!n) {
+            bs->eob = i + 1;
+        }
     }
 }
 
@@ -169,15 +161,15 @@ unsigned int get1bit(Bit_stream_struc *bs)
 int putmask[9]={0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
 
 /*read N bit from the bit stream */
-unsigned long getbits(Bit_stream_struc *bs, int N)
-{
-    unsigned long val=0;
+unsigned long getbits(Bit_stream_struc *bs, int N) {
+    unsigned long val = 0;
     register int i;
     register int j = N;
     register int k, tmp;
     
-    if (N > MAX_LENGTH)
+    if (N > MAX_LENGTH) {
         printf("Cannot read or write more than %d bits at a time.\n", MAX_LENGTH);
+    }
     
     bs->totbit += N;
     while (j > 0) {
@@ -185,51 +177,51 @@ unsigned long getbits(Bit_stream_struc *bs, int N)
             bs->buf_bit_idx = 8;
             bs->buf_byte_idx--;
             if ((bs->buf_byte_idx < MINIMUM) || (bs->buf_byte_idx < bs->eob)) {
-                if (bs->eob)
+                if (bs->eob) {
                     bs->eobs = TRUE;
-                else {
-                    for (i=bs->buf_byte_idx; i>=0;i--)
-                        bs->buf[bs->buf_size-1-bs->buf_byte_idx+i] = bs->buf[i];
+                } else {
+                    for (i = bs->buf_byte_idx; i >= 0; i--) {
+                        bs->buf[bs->buf_size - 1 - bs->buf_byte_idx + i] = bs->buf[i];
+                    }
                     refill_buffer(bs);
-                    bs->buf_byte_idx = bs->buf_size-1;
+                    bs->buf_byte_idx = bs->buf_size - 1;
                 }
             }
         }
         k = MIN(j, bs->buf_bit_idx);
-        tmp = bs->buf[bs->buf_byte_idx]&putmask[bs->buf_bit_idx];
-        tmp = tmp >> (bs->buf_bit_idx-k);
-        val |= tmp << (j-k);
+        tmp = bs->buf[bs->buf_byte_idx] & putmask[bs->buf_bit_idx];
+        tmp = tmp >> (bs->buf_bit_idx - k);
+        val |= tmp << (j - k);
         bs->buf_bit_idx -= k;
         j -= k;
     }
     return val;
 }
 
-
-int seek_sync(Bit_stream_struc *bs, unsigned long sync, int N)
-{
+int seek_sync(Bit_stream_struc *bs, unsigned long sync, int N) {
     unsigned long aligning;
     unsigned long val;
     long maxi = (int)pow(2.0, (double)N) - 1;
     
-    aligning = sstell(bs)%ALIGNING;
-    if (aligning)
-        getbits(bs, (int)(ALIGNING-aligning));
+    aligning = sstell(bs) % ALIGNING;
+    if (aligning) {
+        getbits(bs, (int)(ALIGNING - aligning));
+    }
     
     val = getbits(bs, N);
-    while (((val&maxi) != sync) && (!end_bs(bs))) {
+    while (((val & maxi) != sync) && (!end_bs(bs))) {
         val <<= ALIGNING;
         val |= getbits(bs, ALIGNING);
     }
     
-    if (end_bs(bs))
-        return(0);
-    else
-        return(1);
+    if (end_bs(bs)) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
-int js_bound(int lay, int m_ext)
-{
+int js_bound(int lay, int m_ext) {
     static int jsb_table[3][4] =  {
         { 4, 8, 12, 16 },
         { 4, 8, 12, 16},

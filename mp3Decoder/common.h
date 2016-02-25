@@ -43,7 +43,7 @@
 #define	PI64				PI/64
 #define	PI4					PI/4
 
-/* Header Information Structure */
+/* 帧头格式:4字节(32位：1111111111...(11个1开头)) */
 typedef struct {
     int version;
     int lay;
@@ -70,18 +70,16 @@ typedef struct {
 } frame_params;
 
 typedef struct  bit_stream_struc {
-    FILE        *pt;            /* pointer to bit stream device */
-    unsigned char *buf;         /* bit stream buffer */
-    int         buf_size;       /* size of buffer (in number of bytes) */
-    long        totbit;         /* bit counter of bit stream */
-    int         buf_byte_idx;   /* pointer to top byte in buffer */
-    int         buf_bit_idx;    /* pointer to top bit of top byte in buffer */
-    int         mode;           /* bit stream open in read or write mode */
-    int         eob;            /* end of buffer index */
-    int         eobs;           /* end of bit stream flag */
-    char        format;
-    
-    /* format of file in rd mode (BINARY/ASCII) */
+    FILE            *pt;            /* pointer to bit stream device */
+    unsigned char   *buf;         /* bit stream buffer */
+    int             buf_size;       /* size of buffer (in number of bytes) */
+    long            totbit;         /* bit counter of bit stream */
+    int             buf_byte_idx;   /* pointer to top byte in buffer */
+    int             buf_bit_idx;    /* pointer to top bit of top byte in buffer */
+    int             mode;           /* bit stream open in read or write mode */
+    int             eob;            /* end of buffer index */
+    int             eobs;           /* end of bit stream flag */
+    char            format;         /* format of file in rd mode (BINARY/ASCII) */
 } Bit_stream_struc;
 
 /* Layer III side information. */
@@ -114,7 +112,7 @@ typedef struct {
     int s[3][13];		/* [window][cb] */
 } III_scalefac_t[2];	/* [ch] */
 
-FILE *OpenTableFile(char *name);
+FILE *openTableFile(char *name);
 
 void WriteHdr(frame_params *fr_ps);
 

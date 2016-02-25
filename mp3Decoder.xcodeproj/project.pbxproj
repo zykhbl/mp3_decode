@@ -26,6 +26,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2060CA711C7EDF10005B8DC0 /* huffdec.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = huffdec.txt; sourceTree = "<group>"; };
+		2060CA721C7EDF10005B8DC0 /* mymp3.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = mymp3.mp3; sourceTree = "<group>"; };
+		2060CA731C7EDF72005B8DC0 /* dewindow.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dewindow.txt; sourceTree = "<group>"; };
 		2063EA451C7DA84F00BAC755 /* mp3Decoder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mp3Decoder; sourceTree = BUILT_PRODUCTS_DIR; };
 		2063EA501C7DA88D00BAC755 /* mp3_decoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mp3_decoder.c; sourceTree = "<group>"; };
 		2063EA521C7DA8F200BAC755 /* huffman.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = huffman.c; sourceTree = "<group>"; };
@@ -51,6 +54,9 @@
 		2063EA3C1C7DA84F00BAC755 = {
 			isa = PBXGroup;
 			children = (
+				2060CA731C7EDF72005B8DC0 /* dewindow.txt */,
+				2060CA711C7EDF10005B8DC0 /* huffdec.txt */,
+				2060CA721C7EDF10005B8DC0 /* mymp3.mp3 */,
 				2063EA471C7DA84F00BAC755 /* mp3Decoder */,
 				2063EA461C7DA84F00BAC755 /* Products */,
 			);
@@ -257,6 +263,7 @@
 				2063EA4E1C7DA84F00BAC755 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
