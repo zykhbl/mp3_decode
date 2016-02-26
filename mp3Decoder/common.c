@@ -52,7 +52,7 @@ void *mem_alloc(unsigned long block, char *item) {
     ptr = (void *)malloc((unsigned long)block);
     if (ptr != NULL) {
         memset(ptr, 0, block);
-    }else {
+    } else {
         printf("Unable to allocate %s\n", item);
         exit(0);
     }
@@ -254,13 +254,12 @@ void hputbuf(unsigned int val, int N)
     offset++;
 }
 
-/*return the current bit stream length (in bits)*/
-unsigned long hsstell()
-{
+//return the current bit stream length (in bits)
+unsigned long hsstell() {
     return(totbit);
 }
 
-/*read N bit from the bit stream */
+//read N bit from the bit stream
 unsigned long hgetbits(int N)
 {
     unsigned long val=0;

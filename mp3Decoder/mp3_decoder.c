@@ -85,8 +85,8 @@ int main(int argc, char**argv) {
                 
                 //读主数据(Audio Data)
                 for (; nSlots > 0; nSlots--)  /* read main data. */
-                    hputbuf((unsigned int) getbits(&bs,8), 8);
-                main_data_end = hsstell() / 8; /*of privious frame*/
+                    hputbuf((unsigned int) getbits(&bs, 8), 8);
+                main_data_end = hsstell() / 8; //of privious frame
                 if ( flush_main=(hsstell() % bitsPerSlot) ) {
                     hgetbits((int)(bitsPerSlot - flush_main));
                     main_data_end ++;

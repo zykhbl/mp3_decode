@@ -15,9 +15,9 @@
 void decode_info(Bit_stream_struc *bs, frame_params *fr_ps) {
     layer *hdr = fr_ps->header;
     
-    hdr->version = get1bit(bs);
-    hdr->lay = 4 - (int)getbits(bs, 2);
-    hdr->error_protection = !get1bit(bs); /* error protect. TRUE/FALSE */
+    hdr->version = get1bit(bs);// 00-MPEG 2.5; 01-未定义; 10-MPEG 2; 11-MPEG 1
+    hdr->lay = 4 - (int)getbits(bs, 2); // 00-未定义; 01-Layer 3; 10-Layer 2; 11-Layer 1
+    hdr->error_protection = !get1bit(bs); // 0转为TRUE，检验；1转为FALSE，不校验
     hdr->bitrate_index = (int)getbits(bs, 4);
     hdr->sampling_frequency = (int)getbits(bs, 2);
     hdr->padding = get1bit(bs);
@@ -33,48 +33,52 @@ void III_get_side_info(Bit_stream_struc *bs, III_side_info_t *si, frame_params *
     int ch, gr, i;
     int stereo = fr_ps->stereo;
     
-    si->main_data_begin = getbits(bs, 9);
-    if (stereo == 1)
-        si->private_bits = getbits(bs,5);
-    else
-        si->private_bits = getbits(bs,3);
+    si->main_data_begin = (unsigned)getbits(bs, 9);
+    if (stereo == 1) {
+        si->private_bits = (unsigned)getbits(bs, 5);
+    } else {
+        si->private_bits = (unsigned)getbits(bs, 3);
+    }
     
-    for (ch=0; ch<stereo; ch++)
-        for (i=0; i<4; i++)
+    for (ch = 0; ch < stereo; ch++) {
+        for (i = 0; i < 4; i++) {
             si->ch[ch].scfsi[i] = get1bit(bs);
+        }
+    }
     
-    for (gr=0; gr<2; gr++) {
-        for (ch=0; ch<stereo; ch++) {
-            si->ch[ch].gr[gr].part2_3_length = getbits(bs, 12);
-            si->ch[ch].gr[gr].big_values = getbits(bs, 9);
-            si->ch[ch].gr[gr].global_gain = getbits(bs, 8);
-            si->ch[ch].gr[gr].scalefac_compress = getbits(bs, 4);
+    for (gr = 0; gr < 2; gr++) {
+        for (ch = 0; ch < stereo; ch++) {
+            si->ch[ch].gr[gr].part2_3_length = (unsigned)getbits(bs, 12);
+            si->ch[ch].gr[gr].big_values = (unsigned)getbits(bs, 9);
+            si->ch[ch].gr[gr].global_gain = (unsigned)getbits(bs, 8);
+            si->ch[ch].gr[gr].scalefac_compress = (unsigned)getbits(bs, 4);
             si->ch[ch].gr[gr].window_switching_flag = get1bit(bs);
             if (si->ch[ch].gr[gr].window_switching_flag) {
-                si->ch[ch].gr[gr].block_type = getbits(bs, 2);
+                si->ch[ch].gr[gr].block_type = (unsigned)getbits(bs, 2);
                 si->ch[ch].gr[gr].mixed_block_flag = get1bit(bs);
-                for (i=0; i<2; i++)
-                    si->ch[ch].gr[gr].table_select[i] = getbits(bs, 5);
-                for (i=0; i<3; i++)
-                    si->ch[ch].gr[gr].subblock_gain[i] = getbits(bs, 3);
+                for (i = 0; i < 2; i++) {
+                    si->ch[ch].gr[gr].table_select[i] = (unsigned)getbits(bs, 5);
+                }
+                for (i = 0; i < 3; i++) {
+                    si->ch[ch].gr[gr].subblock_gain[i] = (unsigned)getbits(bs, 3);
+                }
                 
-                /* Set region_count parameters since they are implicit in this case. */
-                
+                //Set region_count parameters since they are implicit in this case.
                 if (si->ch[ch].gr[gr].block_type == 0) {
                     printf("Side info bad: block_type == 0 in split block.\n");
                     exit(0);
+                } else if (si->ch[ch].gr[gr].block_type == 2 && si->ch[ch].gr[gr].mixed_block_flag == 0) {
+                    si->ch[ch].gr[gr].region0_count = 8; // MI 9;
+                } else {
+                    si->ch[ch].gr[gr].region0_count = 7; // MI 8;
                 }
-                else if (si->ch[ch].gr[gr].block_type == 2
-                         && si->ch[ch].gr[gr].mixed_block_flag == 0)
-                    si->ch[ch].gr[gr].region0_count = 8; /* MI 9; */
-                else si->ch[ch].gr[gr].region0_count = 7; /* MI 8; */
                 si->ch[ch].gr[gr].region1_count = 20 - si->ch[ch].gr[gr].region0_count;
-            }
-            else {
-                for (i=0; i<3; i++)
-                    si->ch[ch].gr[gr].table_select[i] = getbits(bs, 5);
-                si->ch[ch].gr[gr].region0_count = getbits(bs, 4);
-                si->ch[ch].gr[gr].region1_count = getbits(bs, 3);
+            } else {
+                for (i=0; i<3; i++) {
+                    si->ch[ch].gr[gr].table_select[i] = (unsigned)getbits(bs, 5);
+                }
+                si->ch[ch].gr[gr].region0_count = (unsigned)getbits(bs, 4);
+                si->ch[ch].gr[gr].region1_count = (unsigned)getbits(bs, 3);
                 si->ch[ch].gr[gr].block_type = 0;
             }
             si->ch[ch].gr[gr].preflag = get1bit(bs);
@@ -757,14 +761,9 @@ void III_hybrid(double fsIn[SSLIMIT], double tsOut[SSLIMIT], int sb, int ch, str
 }
 
 
-/*************************************************************
- /*
- /*   Pass the subband sample through the synthesis window
- /*
- /**************************************************************/
-/* create in synthesis filter */
-void create_syn_filter(double filter[64][SBLIMIT])
-{
+//Pass the subband sample through the synthesis window
+//create in synthesis filter
+void create_syn_filter(double filter[64][SBLIMIT]) {
     register int i,k;
     
     for (i=0; i<64; i++)
@@ -778,14 +777,9 @@ void create_syn_filter(double filter[64][SBLIMIT])
 }
 
 
-/***************************************************************
- /*
- /*   Window the restored sample
- /*
- /***************************************************************/
-/* read in synthesis window */
-void read_syn_window(double window[HAN_SIZE])
-{
+//Window the restored sample
+//read in synthesis window
+void read_syn_window(double window[HAN_SIZE]) {
     int i,j[4];
     FILE *fp;
     double f[4];
@@ -898,21 +892,23 @@ void  buffer_CRC(Bit_stream_struc *bs, unsigned int *old_crc) {
 
 extern int bitrate[3][15];
 extern double s_freq[4];
-/* Return the number of slots for main data of current frame, */
-int main_data_slots(frame_params fr_ps)
-{
+// Return the number of slots for main data of current frame
+int main_data_slots(frame_params fr_ps) {
     int nSlots;
     
-    nSlots = (144 * bitrate[2][fr_ps.header->bitrate_index])
-    / s_freq[fr_ps.header->sampling_frequency];
-    if (fr_ps.header->padding) nSlots++;
+    nSlots = (144 * bitrate[2][fr_ps.header->bitrate_index]) / s_freq[fr_ps.header->sampling_frequency];
+    if (fr_ps.header->padding) {
+        nSlots++;
+    }
     nSlots -= 4;
-    if (fr_ps.header->error_protection)   
-        nSlots -= 2;   
-    if (fr_ps.stereo == 1)   
+    if (fr_ps.header->error_protection) {
+        nSlots -= 2;
+    }
+    if (fr_ps.stereo == 1) {
         nSlots -= 17;   
-    else   
-        nSlots -=32;   
-    return(nSlots);   
+    } else {
+        nSlots -=32;
+    }
+    return(nSlots);
 }
 
