@@ -38,6 +38,8 @@
 		2063EA581C7DAE4000BAC755 /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		2063EA591C7DAF3000BAC755 /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = common.c; sourceTree = "<group>"; };
 		2063EA5B1C7DBD3B00BAC755 /* huff.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = huff.h; sourceTree = "<group>"; };
+		B71187471C82DA9000B0F363 /* qingyuyi.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = qingyuyi.wav; sourceTree = "<group>"; };
+		B71187481C82E7A500B0F363 /* wav.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wav.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +59,7 @@
 				2060CA731C7EDF72005B8DC0 /* dewindow.txt */,
 				2060CA711C7EDF10005B8DC0 /* huffdec.txt */,
 				2060CA721C7EDF10005B8DC0 /* mymp3.mp3 */,
+				B71187471C82DA9000B0F363 /* qingyuyi.wav */,
 				2063EA471C7DA84F00BAC755 /* mp3Decoder */,
 				2063EA461C7DA84F00BAC755 /* Products */,
 			);
@@ -73,6 +76,7 @@
 		2063EA471C7DA84F00BAC755 /* mp3Decoder */ = {
 			isa = PBXGroup;
 			children = (
+				B71187481C82E7A500B0F363 /* wav.h */,
 				2063EA581C7DAE4000BAC755 /* common.h */,
 				2063EA591C7DAF3000BAC755 /* common.c */,
 				2063EA5B1C7DBD3B00BAC755 /* huff.h */,
@@ -234,6 +238,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -241,6 +246,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};

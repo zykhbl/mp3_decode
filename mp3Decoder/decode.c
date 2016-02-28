@@ -164,7 +164,7 @@ void initialize_huffman()
     FILE *fi;
     
     if (huffman_initialized) return;
-    if (!(fi = openTableFile("/Users/weidong_wu/mp3_decode/huffdec.txt") )) {
+    if (!(fi = openTableFile("/Users/zykhbl/mp3/huffdec.txt"))) {
         printf("Please check huffman table 'huffdec.txt'\n");
         exit(1);
     }
@@ -785,7 +785,7 @@ void read_syn_window(double window[HAN_SIZE]) {
     double f[4];
     char t[150];
     
-    if (!(fp = openTableFile("/Users/weidong_wu/mp3_decode/dewindow.txt") )) {
+    if (!(fp = openTableFile("/Users/zykhbl/mp3/dewindow.txt") )) {
         printf("Please check synthesis window table 'dewindow.txt'\n");
         exit(1);
     }

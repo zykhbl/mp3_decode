@@ -241,8 +241,8 @@ void hdr_to_frps(frame_params *fr_ps) {
 
 #define BUFSIZE 4096
 static unsigned int buf[BUFSIZE];
-static unsigned int buf_bit_idx=8;
-static unsigned long offset, totbit=0, buf_byte_idx=0;
+static unsigned int buf_bit_idx = 8;
+static unsigned long offset, totbit = 0, buf_byte_idx = 0;
 
 void hputbuf(unsigned int val, int N)
 {
