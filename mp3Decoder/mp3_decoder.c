@@ -34,25 +34,24 @@ void writeWAVHeader(FILE *f) {
     int len = 80 * 1024 * 1024;
     short channels = 2;
     
-    // 16K、16bit、单声道
-    /* RIFF header */
-    writeString(f, "RIFF");// riff id
-    writeInt(f, len - 8);// riff chunk size *PLACEHOLDER*
-    writeString(f, "WAVE");// wave type
+    //RIFF header
+    writeString(f, "RIFF");//riff id
+    writeInt(f, len - 8);//riff chunk size *PLACEHOLDER*
+    writeString(f, "WAVE");//wave type
     
-    /* fmt chunk */
-    writeString(f, "fmt ");// fmt id
-    writeInt(f, 16);// fmt chunk size
-    writeShort(f, 1);// format: 1(PCM)
-    writeShort(f, channels);// channels: 1
-    writeInt(f, 44100);// samples per second
-    writeInt(f, (int) (channels * 44100 * (16 / 8)));// BPSecond
-    writeShort(f, (short) (channels * (16 / 8)));// BPSample
-    writeShort(f, (short) (16));// bPSample
+    //fmt chunk
+    writeString(f, "fmt ");//fmt id
+    writeInt(f, 16);//fmt chunk size
+    writeShort(f, 1);//format: 1(PCM)
+    writeShort(f, channels);//channels
+    writeInt(f, 44100);//samples per second
+    writeInt(f, (int) (channels * 44100 * (16 / 8)));//BPSecond
+    writeShort(f, (short) (channels * (16 / 8)));//BPSample
+    writeShort(f, (short) (16));//bPSample
     
-    /* data chunk */
-    writeString(f, "data");// data id
-    writeInt(f, len - 44);// data chunk size *PLACEHOLDER*
+    //data chunk
+    writeString(f, "data");//data id
+    writeInt(f, len - 44);//data chunk size *PLACEHOLDER*
 }
 
 int main(int argc, char**argv) {
@@ -92,26 +91,25 @@ int main(int argc, char**argv) {
     
     sample_frames = 0;
     while(!end_bs(&bs)) {
-        //尝试帧同步
-        sync = seek_sync(&bs, SYNC_WORD, SYNC_WORD_LENGTH);
+        sync = seek_sync(&bs, SYNC_WORD, SYNC_WORD_LENGTH);//尝试帧同步
         if (!sync) {
             done = TRUE;
             printf("\nFrame cannot be located\n");
             out_fifo(*pcm_sample, 3, &fr_ps, done, musicout, &sample_frames);
             break;
         }
-        //解码帧头
-        decode_info(&bs, &fr_ps);
-        //将fr_ps.header中的信息解读到fr_ps的相关域中
-        hdr_to_frps(&fr_ps);
-        //输出相关信息
-        if(frameNum == 0) {
+
+        decode_info(&bs, &fr_ps);//解码帧头
+
+        hdr_to_frps(&fr_ps);//将fr_ps.header中的信息解读到fr_ps的相关域中
+
+        if(frameNum == 0) {//输出相关信息
             writeHdr(&fr_ps);
         }
         
         printf("\r%05lu", frameNum++);
         
-        if (info.error_protection) {
+        if (info.error_protection) {//如果有的话，读取错误码
             buffer_CRC(&bs, &old_crc);
         }
         
@@ -125,6 +123,7 @@ int main(int argc, char**argv) {
                 bitsPerSlot = 8;
                 
                 III_get_side_info(&bs, &III_side_info, &fr_ps);//读取Side信息
+                
                 nSlots = main_data_slots(fr_ps);//计算slot个数
                 
                 for (; nSlots > 0; nSlots--) {//读主数据(Audio Data)
@@ -144,7 +143,7 @@ int main(int argc, char**argv) {
                     rewindNbytes(4096);
                 }
                 
-                frame_start += main_data_slots(fr_ps);//当前帧的结尾，同时也是下一帧的开始位置
+                frame_start += main_data_slots(fr_ps);//当前帧的结尾，同时也是下一帧的开始位置(可以直接使用变量nSlots，不用再调用函数main_data_slots计算一次)
                 
                 if (bytes_to_discard < 0) {//TODO: 实现为实时流读取时，可能要在这里控制暂停
                     printf("Not enough main data to decode frame %ld.  Frame discarded.\n", frameNum - 1);
@@ -177,7 +176,7 @@ int main(int argc, char**argv) {
                         double re[SBLIMIT][SSLIMIT];
                         double hybridIn[SBLIMIT][SSLIMIT];//Hybrid filter input
                         double hybridOut[SBLIMIT][SSLIMIT];//Hybrid filter out
-                        double polyPhaseIn[SBLIMIT];     //PolyPhase Input
+                        double polyPhaseIn[SBLIMIT];//PolyPhase Input
                         
                         III_reorder(lr[ch], re, &(III_side_info.ch[ch].gr[gr]), &fr_ps);
 
