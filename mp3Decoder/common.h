@@ -43,8 +43,7 @@
 #define	PI64				PI/64
 #define	PI4					PI/4
 
-/* 帧头格式:4字节(32位：1111111111...(11个1开头)) */
-typedef struct {
+typedef struct {//帧头格式:4字节(32位：11111111111...(12个1开头))
     int version;
     int lay;
     int error_protection;
@@ -140,4 +139,4 @@ unsigned int hget1bit();
 void rewindNbits(int N); 
 void rewindNbytes(int N);
 
-#endif /* common_h */
+#endif

@@ -34,4 +34,4 @@ void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, frame_params *fr_p
 void buffer_CRC(Bit_stream_struc *bs, unsigned int *old_crc);
 int main_data_slots(frame_params fr_ps);
 
-#endif /* decode_h */
+#endif

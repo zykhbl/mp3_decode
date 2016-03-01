@@ -62,15 +62,14 @@ void III_get_side_info(Bit_stream_struc *bs, III_side_info_t *si, frame_params *
                 for (i = 0; i < 3; i++) {
                     si->ch[ch].gr[gr].subblock_gain[i] = (unsigned)getbits(bs, 3);
                 }
-                
-                //Set region_count parameters since they are implicit in this case.
-                if (si->ch[ch].gr[gr].block_type == 0) {
+
+                if (si->ch[ch].gr[gr].block_type == 0) {//Set region_count parameters since they are implicit in this case.
                     printf("Side info bad: block_type == 0 in split block.\n");
                     exit(0);
                 } else if (si->ch[ch].gr[gr].block_type == 2 && si->ch[ch].gr[gr].mixed_block_flag == 0) {
-                    si->ch[ch].gr[gr].region0_count = 8; // MI 9;
+                    si->ch[ch].gr[gr].region0_count = 8;//MI 9;
                 } else {
-                    si->ch[ch].gr[gr].region0_count = 7; // MI 8;
+                    si->ch[ch].gr[gr].region0_count = 7;//MI 8;
                 }
                 si->ch[ch].gr[gr].region1_count = 20 - si->ch[ch].gr[gr].region0_count;
             } else {
@@ -88,7 +87,6 @@ void III_get_side_info(Bit_stream_struc *bs, III_side_info_t *si, frame_params *
     }
 }
 
-
 struct {
     int l[5];
     int s[3];
@@ -96,60 +94,93 @@ struct {
     {0, 6, 11, 16, 21},
     {0, 6, 12}
 };
+
 int slen[2][16]={
     {0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4},
     {0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3}
 };
+
 struct {
     int l[23];
     int s[14];
 } sfBandIndex[3]= {
     {{0,4,8,12,16,20,24,30,36,44,52,62,74,90,110,134,162,196,238,288,342,418,576},
-        {0,4,8,12,16,22,30,40,52,66,84,106,136,192}},
+     {0,4,8,12,16,22,30,40,52,66,84,106,136,192}
+    },
     {{0,4,8,12,16,20,24,30,36,42,50,60,72,88,106,128,156,190,230,276,330,384,576},
-        {0,4,8,12,16,22,28,38,50,64,80,100,126,192}},
+      {0,4,8,12,16,22,28,38,50,64,80,100,126,192}
+    },
     {{0,4,8,12,16,20,24,30,36,44,54,66,82,102,126,156,194,240,296,364,448,550,576},
-        {0,4,8,12,16,22,30,42,58,78,104,138,180,192}}
+     {0,4,8,12,16,22,30,42,58,78,104,138,180,192}
+    }
 };
 
-void III_get_scale_factors(III_scalefac_t *scalefac, III_side_info_t *si, int gr, int ch, frame_params *fr_ps)
-{
+void III_get_scale_factors(III_scalefac_t *scalefac, III_side_info_t *si, int gr, int ch, frame_params *fr_ps) {
     int sfb, i, window;
     struct gr_info_s *gr_info = &(si->ch[ch].gr[gr]);
     
     if (gr_info->window_switching_flag && (gr_info->block_type == 2)) {
-        if (gr_info->mixed_block_flag) { /* MIXED */ /* NEW - ag 11/25 */
-            for (sfb = 0; sfb < 8; sfb++)
-                (*scalefac)[ch].l[sfb] = hgetbits(
-                                                  slen[0][gr_info->scalefac_compress]);
-            for (sfb = 3; sfb < 6; sfb++)
-                for (window=0; window<3; window++)
-                    (*scalefac)[ch].s[window][sfb] = hgetbits(
-                                                              slen[0][gr_info->scalefac_compress]);
-            for (sfb = 6; sfb < 12; sfb++)
-                for (window=0; window<3; window++)
-                    (*scalefac)[ch].s[window][sfb] = hgetbits(
-                                                              slen[1][gr_info->scalefac_compress]);
-            for (sfb=12,window=0; window<3; window++)
+        if (gr_info->mixed_block_flag) {//Mix block (block type = 2 and mixed block flag = 1)
+            
+            //576笔频谱值被分为 17 个scale factor频带
+            //slen1 表示频带 0 到 10 的scale factor大小；slen2 表示频带 11 到 16 的scale factor大小
+            //其中：part2_length = (8 + 3 × 3) × slen1 + (6 × 3) × slen2
+            
+            for (sfb = 0; sfb < 8; sfb++) {//前面8个频带为 long block
+                (*scalefac)[ch].l[sfb] = (int)hgetbits(slen[0][gr_info->scalefac_compress]);
+            }
+            
+            //后面9个频带为short block，每一个频带包含3个窗口（window）
+            for (sfb = 3; sfb < 6; sfb++) {
+                for (window = 0; window < 3; window++) {
+                    (*scalefac)[ch].s[window][sfb] = (int)hgetbits(slen[0][gr_info->scalefac_compress]);
+                }
+            }
+            for (sfb = 6; sfb < 12; sfb++) {
+                for (window = 0; window < 3; window++) {
+                    (*scalefac)[ch].s[window][sfb] = (int)hgetbits(slen[1][gr_info->scalefac_compress]);
+                }
+            }
+            
+            for (sfb = 12, window = 0; window < 3; window++) {//剩余的数组清零
                 (*scalefac)[ch].s[window][sfb] = 0;
-        }
-        else {  /* SHORT*/
-            for (i=0; i<2; i++)
-                for (sfb = sfbtable.s[i]; sfb < sfbtable.s[i+1]; sfb++)
-                    for (window=0; window<3; window++)
-                        (*scalefac)[ch].s[window][sfb] = hgetbits(
-                                                                  slen[i][gr_info->scalefac_compress]);
-            for (sfb=12,window=0; window<3; window++)
+            }
+        } else {//Short block (block type = 2 and mixed block flag = 0)
+            
+            //576笔频谱值被分为 12 个 scale factor 频带
+            //slen1 表示频带 0 到 5 的 scale factor 大小；slen2 表示频带 6 到 11 的 scale factor 大小
+            //其中：part2_length = 3 × 6 × slen1 + 3 × 6 × slen2
+            
+            for (i = 0; i < 2; i++) {
+                for (sfb = sfbtable.s[i]; sfb < sfbtable.s[i + 1]; sfb++) {
+                    for (window = 0; window < 3; window++) {
+                        (*scalefac)[ch].s[window][sfb] = (int)hgetbits(slen[i][gr_info->scalefac_compress]);
+                    }
+                }
+            }
+            
+            for (sfb = 12, window = 0; window < 3; window++) {//剩余的数组清零
                 (*scalefac)[ch].s[window][sfb] = 0;
+            }
         }
-    }
-    else {   /* LONG types 0,1,3 */
-        for (i=0; i<4; i++) {
-            if ((si->ch[ch].scfsi[i] == 0) || (gr == 0))
-                for (sfb = sfbtable.l[i]; sfb < sfbtable.l[i+1]; sfb++)
-                    (*scalefac)[ch].l[sfb] = hgetbits(
-                                                      slen[(i<2)?0:1][gr_info->scalefac_compress]);
+    } else {//Long block  (block type = 0、 1、 3)
+        
+        //576笔频谱值被分为 21 个 scale factor 频带
+        //slen1 表示频带 0 到 10 的 scale factor 大小；slen2 表示频带 11 到 20 的 scale factor 大小
+        //其中：part2_length = 11 × slen1 + 10 × slen2
+        
+        for (i = 0; i < 4; i++) {
+            
+            //当 SCFSI 为 0 表示要读取granule0 和 granule1；当为 1 时只须读取granule0；且granule0的信息与granule1共享
+            //即：当解码到第二组时，如果 SCFSI 被设定为 1，则第二组的 scale factor 不必计算，可以由第一组中直接获得
+            
+            if ((si->ch[ch].scfsi[i] == 0) || (gr == 0)) {
+                for (sfb = sfbtable.l[i]; sfb < sfbtable.l[i + 1]; sfb++) {
+                    (*scalefac)[ch].l[sfb] = (int)hgetbits(slen[(i < 2) ? 0: 1][gr_info->scalefac_compress]);
+                }
+            }
         }
+        
         (*scalefac)[ch].l[22] = 0;
     }
 }
@@ -892,8 +923,8 @@ void buffer_CRC(Bit_stream_struc *bs, unsigned int *old_crc) {
 
 extern int bitrate[3][15];
 extern double s_freq[4];
-// Return the number of slots for main data of current frame
-int main_data_slots(frame_params fr_ps) {
+
+int main_data_slots(frame_params fr_ps) {//根据帧头信息，返回当前帧音频主数据的slot个数
     int nSlots;
     
     nSlots = (144 * bitrate[2][fr_ps.header->bitrate_index]) / s_freq[fr_ps.header->sampling_frequency];
@@ -908,7 +939,7 @@ int main_data_slots(frame_params fr_ps) {
         nSlots -= 2;
     }
     
-    //减去Side信息，Side info大小由声道决定，单声道 17字节，双声道 32位字节
+    //减去Side信息，Side info大小由声道决定，单声道17字节，双声道32位字节
     if (fr_ps.stereo == 1) {
         nSlots -= 17;
     } else {

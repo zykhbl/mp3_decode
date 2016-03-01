@@ -12,6 +12,8 @@
 //http://www.cnblogs.com/gaozehua/tag/音频编码/
 //http://standards.iso.org/ittf/PubliclyAvailableStandards/
 
+//printf("\n1: totbit = %ld, frame_start = %d, main_data_end = %d, main_data_begin = %d, bytes_to_discard = %d \n", hsstell() / 8, frame_start, main_data_end, III_side_info.main_data_begin, bytes_to_discard);
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,14 +158,14 @@ int main(int argc, char**argv) {
                 
                 clip = 0;
                 for (gr = 0; gr < 2; gr++) {
-                    double lr[2][SBLIMIT][SSLIMIT],ro[2][SBLIMIT][SSLIMIT];
+                    double lr[2][SBLIMIT][SSLIMIT], ro[2][SBLIMIT][SSLIMIT];
 
                     for (ch = 0; ch < fr_ps.stereo; ch++) {//主解码
                         long int is[SBLIMIT][SSLIMIT];//保存量化数据
                         int part2_start;
                         part2_start = (int)hsstell();//指针位置硬转int，缓存数组buf里的数据开始位置totbit没有增大
 
-                        III_get_scale_factors(&III_scalefac,&III_side_info, gr, ch, &fr_ps);//获取比例因子
+                        III_get_scale_factors(&III_scalefac, &III_side_info, gr, ch, &fr_ps);//获取比例因子
 
                         III_hufman_decode(is, &III_side_info, ch, gr, part2_start, &fr_ps);//Huffman解码
 
@@ -186,7 +188,7 @@ int main(int argc, char**argv) {
                             III_hybrid(hybridIn[sb], hybridOut[sb], sb, ch, &(III_side_info.ch[ch].gr[gr]), &fr_ps);
                         }
                         
-                        for (ss = 0; ss < 18;ss++) {//多相频率倒置
+                        for (ss = 0; ss < 18; ss++) {//多相频率倒置
                             for (sb = 0; sb < SBLIMIT; sb++) {
                                 if ((ss % 2) && (sb % 2)) {
                                     hybridOut[sb][ss] = -hybridOut[sb][ss];
