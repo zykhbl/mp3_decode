@@ -74,7 +74,7 @@ void III_get_side_info(Bit_stream_struc *bs, III_side_info_t *si, frame_params *
                 }
                 si->ch[ch].gr[gr].region1_count = 20 - si->ch[ch].gr[gr].region0_count;
             } else {
-                for (i=0; i<3; i++) {
+                for (i = 0; i < 3; i++) {
                     si->ch[ch].gr[gr].table_select[i] = (unsigned)getbits(bs, 5);
                 }
                 si->ch[ch].gr[gr].region0_count = (unsigned)getbits(bs, 4);
@@ -164,7 +164,7 @@ void initialize_huffman()
     FILE *fi;
     
     if (huffman_initialized) return;
-    if (!(fi = openTableFile("/Users/zykhbl/mp3/huffdec.txt"))) {
+    if (!(fi = openTableFile("/Users/weidong_wu/mp3_decode/huffdec.txt"))) {
         printf("Please check huffman table 'huffdec.txt'\n");
         exit(1);
     }
@@ -785,7 +785,7 @@ void read_syn_window(double window[HAN_SIZE]) {
     double f[4];
     char t[150];
     
-    if (!(fp = openTableFile("/Users/zykhbl/mp3/dewindow.txt") )) {
+    if (!(fp = openTableFile("/Users/weidong_wu/mp3_decode/dewindow.txt") )) {
         printf("Please check synthesis window table 'dewindow.txt'\n");
         exit(1);
     }
@@ -885,7 +885,7 @@ void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, frame_params *fr_p
 }
 
 
-void  buffer_CRC(Bit_stream_struc *bs, unsigned int *old_crc) {
+void buffer_CRC(Bit_stream_struc *bs, unsigned int *old_crc) {
     *old_crc = (unsigned int)getbits(bs, 16);
 }
 
@@ -897,18 +897,24 @@ int main_data_slots(frame_params fr_ps) {
     int nSlots;
     
     nSlots = (144 * bitrate[2][fr_ps.header->bitrate_index]) / s_freq[fr_ps.header->sampling_frequency];
-    if (fr_ps.header->padding) {
+    
+    if (fr_ps.header->padding) {//如果frame中包含附加slot，以调整平均比特率与采样频率一致，那么加上1字节
         nSlots++;
     }
-    nSlots -= 4;
-    if (fr_ps.header->error_protection) {
+    
+    nSlots -= 4;//减去帧头4字节(32位)
+    
+    if (fr_ps.header->error_protection) {//如果有错误码校验，再减去2字节(16位)
         nSlots -= 2;
     }
+    
+    //减去Side信息，Side info大小由声道决定，单声道 17字节，双声道 32位字节
     if (fr_ps.stereo == 1) {
-        nSlots -= 17;   
+        nSlots -= 17;
     } else {
-        nSlots -=32;
+        nSlots -= 32;
     }
-    return(nSlots);
+    
+    return nSlots;
 }
 

@@ -11,14 +11,14 @@
 #include <math.h>
 #include "common.h"
 
-char *layer_names[3] = { "I", "II", "III" };
+char *layer_names[3] = {"I", "II", "III"};
 int bitrate[3][15] = {
     {0,32,64,96,128,160,192,224,256,288,320,352,384,416,448},
     {0,32,48,56,64,80,96,112,128,160,192,224,256,320,384},
     {0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}
 };
-double  s_freq[4] = {44.1, 48, 32, 0};
-char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
+double s_freq[4] = {44.1, 48, 32, 0};
+char *mode_names[4] = {"stereo", "j-stereo", "dual-ch", "single-ch"};
 
 
 FILE *openTableFile(char *name) {
@@ -244,8 +244,7 @@ static unsigned int buf[BUFSIZE];
 static unsigned int buf_bit_idx = 8;
 static unsigned long offset, totbit = 0, buf_byte_idx = 0;
 
-void hputbuf(unsigned int val, int N)
-{
+void hputbuf(unsigned int val, int N) {
     if (N != 8) {
         printf("Not Supported yet!!\n");
         exit(-3);
@@ -256,13 +255,12 @@ void hputbuf(unsigned int val, int N)
 
 //return the current bit stream length (in bits)
 unsigned long hsstell() {
-    return(totbit);
+    return totbit;
 }
 
 //read N bit from the bit stream
-unsigned long hgetbits(int N)
-{
-    unsigned long val=0;
+unsigned long hgetbits(int N) {
+    unsigned long val = 0;
     register int j = N;
     register int k, tmp;
     
@@ -281,36 +279,30 @@ unsigned long hgetbits(int N)
             }
         }
         k = MIN(j, buf_bit_idx);
-        tmp = buf[buf_byte_idx%BUFSIZE]&putmask[buf_bit_idx];
-        tmp = tmp >> (buf_bit_idx-k);
-        val |= tmp << (j-k);
+        tmp = buf[buf_byte_idx % BUFSIZE] & putmask[buf_bit_idx];
+        tmp = tmp >> (buf_bit_idx - k);
+        val |= tmp << (j - k);
         buf_bit_idx -= k;
         j -= k;
     }
-    return(val);
+    return val;
 }
 
-
-unsigned int hget1bit()
-{
-    return(hgetbits(1));
+unsigned int hget1bit() {
+    return (unsigned int)hgetbits(1);
 }
 
-
-void rewindNbits(int N)
-{
+void rewindNbits(int N) {
     totbit -= N;
     buf_bit_idx += N;
-    while( buf_bit_idx >= 8 ){
+    while(buf_bit_idx >= 8){
         buf_bit_idx -= 8;
         buf_byte_idx--;
     }
 }
 
-
-void rewindNbytes(int N)
-{
-    totbit -= N*8;
+void rewindNbytes(int N) {
+    totbit -= N * 8;
     buf_byte_idx -= N;
 }
 
