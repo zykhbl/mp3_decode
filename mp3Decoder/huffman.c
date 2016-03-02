@@ -120,8 +120,8 @@ int huffman_decoder(struct huffcodetab *h, int *x, int *y, int *v, int *w) {
     //Lookup in Huffman table
     do {//搜索二叉树，至到找到叶子节点
         if (h->val[point][0] == 0) {//end of tree(叶子节点：val[point][0] == 0，val[point][1]为量化系数)
-            *x = h->val[point][1] >> 4;//h->val[point][1] 的高4位
-            *y = h->val[point][1] & 0xf;//h->val[point][1] 的低4位
+            *x = h->val[point][1] >> 4;//h->val[point][1] 的高4位，量化系数残差谱线幅值范围为[0, 15]
+            *y = h->val[point][1] & 0xf;//h->val[point][1] 的低4位，量化系数残差谱线幅值范围为[0, 15]
             
             error = 0;
             break;
@@ -161,6 +161,7 @@ int huffman_decoder(struct huffcodetab *h, int *x, int *y, int *v, int *w) {
         
 //        {int i=*v; *v=*y; *y=i; i=*w; *w=*x; *x=i;}//MI
         
+        //在huffman码字后是每个非零残差谱线的符号位
         if (*v) {
             if (hget1bit() == 1) {
                 *v = -*v;
@@ -189,6 +190,7 @@ int huffman_decoder(struct huffcodetab *h, int *x, int *y, int *v, int *w) {
 //        //removed 11/11/92 -ag
 //         {int i=*x; *x=*y; *y=i;}
 
+        //在huffman码字后是每个非零残差谱线的符号位
         if (h->linbits) {
             if ((h->xlen - 1) == *x) {
                 *x += hgetbits(h->linbits);
