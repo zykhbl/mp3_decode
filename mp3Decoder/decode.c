@@ -237,6 +237,7 @@ void III_hufman_decode(long int is[SBLIMIT][SSLIMIT], III_side_info_t *si, int c
     }
     
     //为了使格组量化频谱系数所需的比特数最少，无噪声编码把一组576个量化频谱系数分成3个region（由低频到高频分别为big_value区，count1区，zero区），每个region一个霍夫曼码书
+    //其中：big_value区又分为 子区0，子区1，子区2，使用不同边信息 III_side_info_t 里的 table_select 选择适当的huffman码表
     
     for (i = 0; i < (*si).ch[ch].gr[gr].big_values * 2; i += 2) {//Read bigvalues area（big_value区一个huffman码字表示2个量化系数，使用32个huffman表）
         if (i < region1Start) {
