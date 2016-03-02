@@ -1,11 +1,3 @@
-//
-//  huffman.h
-//  mp3Decoder
-//
-//  Created by zykhbl on 16/2/24.
-//  Copyright © 2016年 zykhbl. All rights reserved.
-//
-
 /**********************************************************************
  Copyright (c) 1991 MPEG/audio software simulation group, All Rights Reserved
  huffman.h
@@ -30,21 +22,23 @@
 #define MXOFF	250
 
 struct huffcodetab {
-    char tablename[3];	/*string, containing table_description	*/
-    unsigned int xlen; 	/*max. x-index+			      	*/
-    unsigned int ylen;	/*max. y-index+				*/
-    unsigned int linbits; /*number of linbits			*/
-    unsigned int linmax;	/*max number to be stored in linbits	*/
-    int ref;		/*a positive value indicates a reference*/
-    HUFFBITS *table;	/*pointer to array[xlen][ylen]		*/
-    unsigned char *hlen;	/*pointer to array[xlen][ylen]		*/
-    unsigned char(*val)[2];/*decoder tree				*/
-    unsigned int treelen;	/*length of decoder tree		*/
+    char tablename[3];//string, containing table_description
+    unsigned int xlen;//max. x-index+
+    unsigned int ylen;//max. y-index+
+    unsigned int linbits;//number of linbits
+    unsigned int linmax;//max number to be stored in linbits
+    int ref;//a positive value indicates a reference
+    HUFFBITS *table;//pointer to array[xlen][ylen]
+    unsigned char *hlen;//pointer to array[xlen][ylen]
+    unsigned char(*val)[2];//decoder tree
+    unsigned int treelen;//length of decoder tree
 };
 
-extern struct huffcodetab ht[HTN];/* global memory block		*/
-/* array of all huffcodtable headers	*/
-/* 0..31 Huffman code table 0..31	*/
-/* 32,33 count1-tables			*/
+extern struct huffcodetab ht[HTN];//global memory block
+
+//array of all huffcodtable headers
+//0..31 Huffman code table 0..31
+//32,33 count1-tables
+
 extern int read_decoder_table(FILE *);
 extern int huffman_decoder(struct huffcodetab *, int *, int*, int*, int*);

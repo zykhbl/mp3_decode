@@ -163,7 +163,7 @@ int main(int argc, char**argv) {
                     for (ch = 0; ch < fr_ps.stereo; ch++) {//主解码
                         long int is[SBLIMIT][SSLIMIT];//保存量化数据
                         int part2_start;
-                        part2_start = (int)hsstell();//注意：指针位置硬转int，缓存数组buf里的数据开始位置 totbit 并没有增大
+                        part2_start = (int)hsstell();//totbit 的位置，即：当前帧音频主数据(main data)：scale_factor + hufman_code的开始位置
 
                         III_get_scale_factors(&III_scalefac, &III_side_info, gr, ch, &fr_ps);//获取比例因子
 

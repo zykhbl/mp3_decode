@@ -193,17 +193,18 @@ void III_get_scale_factors(III_scalefac_t *scalefac, III_side_info_t *si, int gr
  */
 int huffman_initialized = FALSE;
 
-void initialize_huffman()
-{
+void initialize_huffman() {
     FILE *fi;
     
-    if (huffman_initialized) return;
+    if (huffman_initialized) {
+        return;
+    }
     if (!(fi = openTableFile("/Users/weidong_wu/mp3_decode/huffdec.txt"))) {
         printf("Please check huffman table 'huffdec.txt'\n");
         exit(1);
     }
     
-    if (fi==NULL) {
+    if (fi == NULL) {
         fprintf(stderr,"decoder table open error\n");
         exit(3);
     }
@@ -212,84 +213,76 @@ void initialize_huffman()
         fprintf(stderr,"decoder table read error\n");
         exit(4);
     }
+    
     huffman_initialized = TRUE;
 }
 
-
-void III_hufman_decode(long int is[SBLIMIT][SSLIMIT], III_side_info_t *si, int ch, int gr, int part2_start, frame_params *fr_ps)
-{
+void III_hufman_decode(long int is[SBLIMIT][SSLIMIT], III_side_info_t *si, int ch, int gr, int part2_start, frame_params *fr_ps) {
     int i, x, y;
     int v, w;
     struct huffcodetab *h;
     int region1Start;
     int region2Start;
-    int bt = (*si).ch[ch].gr[gr].window_switching_flag && ((*si).ch[ch].gr[gr].block_type == 2);
     
     initialize_huffman();
     
-    /* Find region boundary for short block case. */
-    
-    if ( ((*si).ch[ch].gr[gr].window_switching_flag) &&
-        ((*si).ch[ch].gr[gr].block_type == 2) ) {
-        
-        /* Region2. */
-        
-        region1Start = 36;  /* sfb[9/3]*3=36 */
-        region2Start = 576; /* No Region2 for short block case. */
+    // ??
+    if (((*si).ch[ch].gr[gr].window_switching_flag) && ((*si).ch[ch].gr[gr].block_type == 2)) {//Find region boundary for short block case
+        //Region2
+        region1Start = 36; //sfb[9 / 3] * 3 = 36
+        region2Start = 576;//No Region2 for short block case
+    } else {//Find region boundary for long block case
+        region1Start = sfBandIndex[fr_ps->header->sampling_frequency].l[(*si).ch[ch].gr[gr].region0_count + 1];//MI
+        region2Start = sfBandIndex[fr_ps->header->sampling_frequency].l[(*si).ch[ch].gr[gr].region0_count + (*si).ch[ch].gr[gr].region1_count + 2];//MI
     }
     
+    //为了使格组量化频谱系数所需的比特数最少，无噪声编码把一组576个量化频谱系数分成3个region（由低频到高频分别为big_value区，count1区，zero区），每个region一个霍夫曼码书
     
-    else {          /* Find region boundary for long block case. */
+    for (i = 0; i < (*si).ch[ch].gr[gr].big_values * 2; i += 2) {//Read bigvalues area（big_value区一个huffman码字表示2个量化系数，使用32个huffman表）
+        if (i < region1Start) {
+            h = &ht[(*si).ch[ch].gr[gr].table_select[0]];
+        } else if (i < region2Start) {
+            h = &ht[(*si).ch[ch].gr[gr].table_select[1]];
+        } else {
+            h = &ht[(*si).ch[ch].gr[gr].table_select[2]];
+        }
         
-        region1Start = sfBandIndex[fr_ps->header->sampling_frequency]
-        .l[(*si).ch[ch].gr[gr].region0_count + 1]; /* MI */
-        region2Start = sfBandIndex[fr_ps->header->sampling_frequency]
-        .l[(*si).ch[ch].gr[gr].region0_count +
-           (*si).ch[ch].gr[gr].region1_count + 2]; /* MI */
-    }
-    
-    
-    /* Read bigvalues area. */
-    for (i=0; i<(*si).ch[ch].gr[gr].big_values*2; i+=2) {
-        if      (i<region1Start) h = &ht[(*si).ch[ch].gr[gr].table_select[0]];
-        else if (i<region2Start) h = &ht[(*si).ch[ch].gr[gr].table_select[1]];
-        else                h = &ht[(*si).ch[ch].gr[gr].table_select[2]];
         huffman_decoder(h, &x, &y, &v, &w);
-        is[i/SSLIMIT][i%SSLIMIT] = x;
-        is[(i+1)/SSLIMIT][(i+1)%SSLIMIT] = y;
+        
+        is[i / SSLIMIT][i % SSLIMIT] = x;
+        is[(i + 1) / SSLIMIT][(i + 1) % SSLIMIT] = y;
     }
     
-    /* Read count1 area. */
-    h = &ht[(*si).ch[ch].gr[gr].count1table_select+32];
-    while ((hsstell() < part2_start + (*si).ch[ch].gr[gr].part2_3_length ) &&
-           ( i < SSLIMIT*SBLIMIT )) {
+    //count1区一个huffman码字表示4个量化系数，一共使用了2本码书
+    h = &ht[(*si).ch[ch].gr[gr].count1table_select + 32];
+    while ((hsstell() < part2_start + (*si).ch[ch].gr[gr].part2_3_length) && (i < SSLIMIT * SBLIMIT)) {//Read count1 area
         huffman_decoder(h, &x, &y, &v, &w);
-        is[i/SSLIMIT][i%SSLIMIT] = v;
-        is[(i+1)/SSLIMIT][(i+1)%SSLIMIT] = w;
-        is[(i+2)/SSLIMIT][(i+2)%SSLIMIT] = x;
-        is[(i+3)/SSLIMIT][(i+3)%SSLIMIT] = y;
+        
+        is[i / SSLIMIT][i % SSLIMIT] = v;
+        is[(i + 1) / SSLIMIT][(i + 1) % SSLIMIT] = w;
+        is[(i + 2) / SSLIMIT][(i + 2) % SSLIMIT] = x;
+        is[(i + 3) / SSLIMIT][(i + 3) % SSLIMIT] = y;
         i += 4;
     }
     
-    if (hsstell() > part2_start + (*si).ch[ch].gr[gr].part2_3_length)
-    {  i -=4;
-        rewindNbits(hsstell()-part2_start - (*si).ch[ch].gr[gr].part2_3_length);
+    if (hsstell() > part2_start + (*si).ch[ch].gr[gr].part2_3_length) {
+        i -= 4;
+        rewindNbits((int)(hsstell() - part2_start - (*si).ch[ch].gr[gr].part2_3_length));
     }
     
-    /* Dismiss stuffing Bits */
-    if ( hsstell() < part2_start + (*si).ch[ch].gr[gr].part2_3_length )
-        hgetbits( part2_start + (*si).ch[ch].gr[gr].part2_3_length - hsstell());
+    if (hsstell() < part2_start + (*si).ch[ch].gr[gr].part2_3_length) {//Dismiss stuffing Bits
+        hgetbits((int)(part2_start + (*si).ch[ch].gr[gr].part2_3_length - hsstell()));
+    }
     
-    /* Zero out rest. */
-    for (; i<SSLIMIT*SBLIMIT; i++)
-        is[i/SSLIMIT][i%SSLIMIT] = 0;
+    for (; i < SSLIMIT * SBLIMIT; i++) {//Zero out rest（zero区不用解码。表示余下子带谱线值全为0）
+        is[i / SSLIMIT][i % SSLIMIT] = 0;
+    }
 }
 
 
 int pretab[22] = {0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2,2,3,3,3,2,0};
 
-void III_dequantize_sample(long int is[SBLIMIT][SSLIMIT], double xr[SBLIMIT][SSLIMIT], III_scalefac_t *scalefac, struct gr_info_s *gr_info, int ch, frame_params *fr_ps)
-{
+void III_dequantize_sample(long int is[SBLIMIT][SSLIMIT], double xr[SBLIMIT][SSLIMIT], III_scalefac_t *scalefac, struct gr_info_s *gr_info, int ch, frame_params *fr_ps) {
     int ss,sb,cb=0,sfreq=fr_ps->header->sampling_frequency;
     int stereo = fr_ps->stereo;
     int next_cb_boundary, cb_begin, cb_width, sign;

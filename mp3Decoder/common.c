@@ -28,7 +28,7 @@ FILE *openTableFile(char *name) {
     fulname[0] = '\0';
     
     strcat(fulname, name);
-    if( (f = fopen(fulname,"r"))==NULL ) {
+    if( (f = fopen(fulname, "r")) == NULL ) {
         fprintf(stderr,"\nopenTable: could not find %s\n", fulname);
     }
     
