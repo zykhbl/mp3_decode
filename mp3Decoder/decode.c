@@ -356,310 +356,320 @@ void III_dequantize_sample(long int is[SBLIMIT][SSLIMIT], double xr[SBLIMIT][SSL
 }
 
 void III_reorder(double xr[SBLIMIT][SSLIMIT], double ro[SBLIMIT][SSLIMIT], struct gr_info_s *gr_info, frame_params *fr_ps) {
-    int sfreq=fr_ps->header->sampling_frequency;
+    int sfreq = fr_ps->header->sampling_frequency;
     int sfb, sfb_start, sfb_lines;
     int sb, ss, window, freq, src_line, des_line;
     
-    for(sb=0;sb<SBLIMIT;sb++)
-        for(ss=0;ss<SSLIMIT;ss++)
+    for(sb = 0; sb < SBLIMIT; sb++) {
+        for(ss = 0; ss < SSLIMIT; ss++) {
             ro[sb][ss] = 0;
-    
-    if (gr_info->window_switching_flag && (gr_info->block_type == 2)) {
-        if (gr_info->mixed_block_flag) {
-            /* NO REORDER FOR LOW 2 SUBBANDS */
-            for (sb=0 ; sb < 2 ; sb++)
-                for (ss=0 ; ss < SSLIMIT ; ss++) {
-                    ro[sb][ss] = xr[sb][ss];
-                }
-            /* REORDERING FOR REST SWITCHED SHORT */
-            for(sfb=3,sfb_start=sfBandIndex[sfreq].s[3],
-                sfb_lines=sfBandIndex[sfreq].s[4] - sfb_start;
-                sfb < 13; sfb++,sfb_start=sfBandIndex[sfreq].s[sfb],
-                (sfb_lines=sfBandIndex[sfreq].s[sfb+1] - sfb_start))
-                for(window=0; window<3; window++)
-                    for(freq=0;freq<sfb_lines;freq++) {
-                        src_line = sfb_start*3 + window*sfb_lines + freq;
-                        des_line = (sfb_start*3) + window + (freq*3);
-                        ro[des_line/SSLIMIT][des_line%SSLIMIT] =
-                        xr[src_line/SSLIMIT][src_line%SSLIMIT];
-                    }
-        }
-        else {  /* pure short */
-            for(sfb=0,sfb_start=0,sfb_lines=sfBandIndex[sfreq].s[1];
-                sfb < 13; sfb++,sfb_start=sfBandIndex[sfreq].s[sfb],
-                (sfb_lines=sfBandIndex[sfreq].s[sfb+1] - sfb_start))
-                for(window=0; window<3; window++)
-                    for(freq=0;freq<sfb_lines;freq++) {
-                        src_line = sfb_start*3 + window*sfb_lines + freq;
-                        des_line = (sfb_start*3) + window + (freq*3);
-                        ro[des_line/SSLIMIT][des_line%SSLIMIT] =
-                        xr[src_line/SSLIMIT][src_line%SSLIMIT];
-                    }
         }
     }
-    else {   /*long blocks */
-        for (sb=0 ; sb < SBLIMIT ; sb++)
-            for (ss=0 ; ss < SSLIMIT ; ss++)
+    
+    if (gr_info->window_switching_flag && (gr_info->block_type == 2)) {
+        if (gr_info->mixed_block_flag) {//NO REORDER FOR LOW 2 SUBBANDS
+            for (sb = 0; sb < 2; sb++) {
+                for (ss = 0; ss < SSLIMIT; ss++) {
+                    ro[sb][ss] = xr[sb][ss];
+                }
+            }
+            
+            //REORDERING FOR REST SWITCHED SHORT
+            for(sfb = 3, sfb_start = sfBandIndex[sfreq].s[3], sfb_lines = sfBandIndex[sfreq].s[4] - sfb_start; sfb < 13; sfb++, sfb_start = sfBandIndex[sfreq].s[sfb], (sfb_lines = sfBandIndex[sfreq].s[sfb + 1] - sfb_start)) {
+                for(window = 0; window < 3; window++) {
+                    for(freq = 0; freq < sfb_lines; freq++) {
+                        src_line = sfb_start * 3 + window * sfb_lines + freq;
+                        des_line = (sfb_start * 3) + window + (freq * 3);
+                        ro[des_line / SSLIMIT][des_line % SSLIMIT] = xr[src_line / SSLIMIT][src_line % SSLIMIT];
+                    }
+                }
+            }
+        } else {//pure short
+            for(sfb = 0, sfb_start = 0, sfb_lines = sfBandIndex[sfreq].s[1]; sfb < 13; sfb++, sfb_start = sfBandIndex[sfreq].s[sfb], (sfb_lines = sfBandIndex[sfreq].s[sfb + 1] - sfb_start)) {
+                for(window = 0; window < 3; window++) {
+                    for(freq = 0; freq < sfb_lines;freq++) {
+                        src_line = sfb_start * 3 + window * sfb_lines + freq;
+                        des_line = (sfb_start * 3) + window + (freq * 3);
+                        ro[des_line / SSLIMIT][des_line % SSLIMIT] = xr[src_line / SSLIMIT][src_line % SSLIMIT];
+                    }
+                }
+            }
+        }
+    } else {//long blocks
+        for (sb = 0; sb < SBLIMIT; sb++) {
+            for (ss = 0; ss < SSLIMIT; ss++) {
                 ro[sb][ss] = xr[sb][ss];
+            }
+        }
     }
 }
 
 void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], III_scalefac_t *scalefac, struct gr_info_s *gr_info, frame_params *fr_ps) {
     int sfreq = fr_ps->header->sampling_frequency;
     int stereo = fr_ps->stereo;
-    int ms_stereo = (fr_ps->header->mode == MPG_MD_JOINT_STEREO) &&
-    (fr_ps->header->mode_ext & 0x2);
-    int i_stereo = (fr_ps->header->mode == MPG_MD_JOINT_STEREO) &&
-    (fr_ps->header->mode_ext & 0x1);
+    int ms_stereo = (fr_ps->header->mode == MPG_MD_JOINT_STEREO) && (fr_ps->header->mode_ext & 0x2);
+    int i_stereo = (fr_ps->header->mode == MPG_MD_JOINT_STEREO) && (fr_ps->header->mode_ext & 0x1);
     int sfb;
-    int i,j,sb,ss,ch,is_pos[576];
+    int i, j, sb, ss, ch, is_pos[576];
     double is_ratio[576];
     
-    /* intialization */
-    for ( i=0; i<576; i++ )
+    //intialization
+    for (i = 0; i < 576; i++) {
         is_pos[i] = 7;
+    }
     
-    if ((stereo == 2) && i_stereo )
-    {  if (gr_info->window_switching_flag && (gr_info->block_type == 2))
-    {  if( gr_info->mixed_block_flag )
-    {  int max_sfb = 0;
-        
-        for ( j=0; j<3; j++ )
-        {  int sfbcnt;
-            sfbcnt = 2;
-            for( sfb=12; sfb >=3; sfb-- )
-            {  int lines;
-                lines = sfBandIndex[sfreq].s[sfb+1]-sfBandIndex[sfreq].s[sfb];
-                i = 3*sfBandIndex[sfreq].s[sfb] + (j+1) * lines - 1;
-                while ( lines > 0 )
-                {  if ( xr[1][i/SSLIMIT][i%SSLIMIT] != 0.0 )
-                {  sfbcnt = sfb;
-                    sfb = -10;
-                    lines = -10;
+    if ((stereo == 2) && i_stereo) {
+        if (gr_info->window_switching_flag && (gr_info->block_type == 2)) {
+            if(gr_info->mixed_block_flag) {
+                int max_sfb = 0;
+                
+                for (j = 0; j < 3; j++) {
+                    int sfbcnt;
+                    sfbcnt = 2;
+                    for(sfb = 12; sfb >= 3; sfb--) {
+                        int lines;
+                        lines = sfBandIndex[sfreq].s[sfb + 1] - sfBandIndex[sfreq].s[sfb];
+                        i = 3 * sfBandIndex[sfreq].s[sfb] + (j + 1) * lines - 1;
+                        while (lines > 0) {
+                            if (xr[1][i / SSLIMIT][i % SSLIMIT] != 0.0) {
+                                sfbcnt = sfb;
+                                sfb = -10;
+                                lines = -10;
+                            }
+                            lines--;
+                            i--;
+                        }
+                    }
+                    sfb = sfbcnt + 1;
+                    
+                    if (sfb > max_sfb) {
+                        max_sfb = sfb;
+                    }
+                    
+                    while(sfb < 12) {
+                        sb = sfBandIndex[sfreq].s[sfb + 1] - sfBandIndex[sfreq].s[sfb];
+                        i = 3 * sfBandIndex[sfreq].s[sfb] + j * sb;
+                        for (; sb > 0; sb--) {
+                            is_pos[i] = (*scalefac)[1].s[j][sfb];
+                            if (is_pos[i] != 7) {
+                                is_ratio[i] = tan(is_pos[i] * (PI / 12));
+                            }
+                            i++;
+                        }
+                        sfb++;
+                    }
+                    sb = sfBandIndex[sfreq].s[11] - sfBandIndex[sfreq].s[10];
+                    sfb = 3 * sfBandIndex[sfreq].s[10] + j * sb;
+                    sb = sfBandIndex[sfreq].s[12] - sfBandIndex[sfreq].s[11];
+                    i = 3 * sfBandIndex[sfreq].s[11] + j * sb;
+                    for (; sb > 0; sb--) {
+                        is_pos[i] = is_pos[sfb];
+                        is_ratio[i] = is_ratio[sfb];
+                        i++;
+                    }
                 }
-                    lines--;
-                    i--;
+                if (max_sfb <= 3) {
+                    i = 2;
+                    ss = 17;
+                    sb = -1;
+                    while (i >= 0) {
+                        if (xr[1][i][ss] != 0.0) {
+                            sb = i * 18 + ss;
+                            i = -1;
+                        } else {
+                            ss--;
+                            if (ss < 0) {
+                                i--;
+                                ss = 17;
+                            }
+                        }
+                    }
+                    i = 0;
+                    while (sfBandIndex[sfreq].l[i] <= sb) {
+                        i++;
+                    }
+                    sfb = i;
+                    i = sfBandIndex[sfreq].l[i];
+                    for (; sfb < 8; sfb++) {
+                        sb = sfBandIndex[sfreq].l[sfb + 1] - sfBandIndex[sfreq].l[sfb];
+                        for (; sb > 0; sb--) {
+                            is_pos[i] = (*scalefac)[1].l[sfb];
+                            if (is_pos[i] != 7) {
+                                is_ratio[i] = tan(is_pos[i] * (PI / 12));
+                            }
+                            i++;
+                        }
+                    }
+                }
+            } else {
+                for (j = 0; j < 3; j++) {
+                    int sfbcnt;
+                    sfbcnt = -1;
+                    for(sfb = 12; sfb >= 0; sfb--) {
+                        int lines;
+                        lines = sfBandIndex[sfreq].s[sfb + 1] - sfBandIndex[sfreq].s[sfb];
+                        i = 3 * sfBandIndex[sfreq].s[sfb] + (j + 1) * lines - 1;
+                        while (lines > 0) {
+                            if (xr[1][i / SSLIMIT][i % SSLIMIT] != 0.0) {
+                                sfbcnt = sfb;
+                                sfb = -10;
+                                lines = -10;
+                            }
+                            lines--;
+                            i--;
+                        }
+                    }
+                    sfb = sfbcnt + 1;
+                    while(sfb < 12) {
+                        sb = sfBandIndex[sfreq].s[sfb + 1] - sfBandIndex[sfreq].s[sfb];
+                        i = 3 * sfBandIndex[sfreq].s[sfb] + j * sb;
+                        for (; sb > 0; sb--) {
+                            is_pos[i] = (*scalefac)[1].s[j][sfb];
+                            if (is_pos[i] != 7) {
+                                is_ratio[i] = tan(is_pos[i] * (PI / 12));
+                            }
+                            i++;
+                        }
+                        sfb++;
+                    }
+                    
+                    sb = sfBandIndex[sfreq].s[11] - sfBandIndex[sfreq].s[10];
+                    sfb = 3 * sfBandIndex[sfreq].s[10] + j * sb;
+                    sb = sfBandIndex[sfreq].s[12] - sfBandIndex[sfreq].s[11];
+                    i = 3 * sfBandIndex[sfreq].s[11] + j * sb;
+                    for (; sb > 0; sb--) {
+                        is_pos[i] = is_pos[sfb];
+                        is_ratio[i] = is_ratio[sfb];
+                        i++;
+                    }
                 }
             }
-            sfb = sfbcnt + 1;
-            
-            if ( sfb > max_sfb )
-                max_sfb = sfb;
-            
-            while( sfb<12 )
-            {  sb = sfBandIndex[sfreq].s[sfb+1]-sfBandIndex[sfreq].s[sfb];
-                i = 3*sfBandIndex[sfreq].s[sfb] + j * sb;
-                for ( ; sb > 0; sb--)
-                {  is_pos[i] = (*scalefac)[1].s[j][sfb];
-                    if ( is_pos[i] != 7 )
-                        is_ratio[i] = tan( is_pos[i] * (PI / 12));
+        } else {
+            i = 31;
+            ss = 17;
+            sb = 0;
+            while (i >= 0) {
+                if (xr[1][i][ss] != 0.0) {
+                    sb = i * 18 + ss;
+                    i = -1;
+                } else {
+                    ss--;
+                    if (ss < 0) {
+                        i--;
+                        ss = 17;
+                    }
+                }
+            }
+            i = 0;
+            while (sfBandIndex[sfreq].l[i] <= sb) {
+                i++;
+            }
+            sfb = i;
+            i = sfBandIndex[sfreq].l[i];
+            for (; sfb < 21; sfb++) {
+                sb = sfBandIndex[sfreq].l[sfb + 1] - sfBandIndex[sfreq].l[sfb];
+                for (; sb > 0; sb--) {
+                    is_pos[i] = (*scalefac)[1].l[sfb];
+                    if (is_pos[i] != 7) {
+                        is_ratio[i] = tan(is_pos[i] * (PI / 12));
+                    }
                     i++;
                 }
-                sfb++;
             }
-            sb = sfBandIndex[sfreq].s[11]-sfBandIndex[sfreq].s[10];
-            sfb = 3*sfBandIndex[sfreq].s[10] + j * sb;
-            sb = sfBandIndex[sfreq].s[12]-sfBandIndex[sfreq].s[11];
-            i = 3*sfBandIndex[sfreq].s[11] + j * sb;
-            for ( ; sb > 0; sb-- )
-            {  is_pos[i] = is_pos[sfb];
+            sfb = sfBandIndex[sfreq].l[20];
+            for (sb = 576 - sfBandIndex[sfreq].l[21]; sb > 0; sb--) {
+                is_pos[i] = is_pos[sfb];
                 is_ratio[i] = is_ratio[sfb];
                 i++;
             }
         }
-        if ( max_sfb <= 3 )
-        {  i = 2;
-            ss = 17;
-            sb = -1;
-            while ( i >= 0 )
-            {  if ( xr[1][i][ss] != 0.0 )
-            {  sb = i*18+ss;
-                i = -1;
-            } else
-            {  ss--;
-                if ( ss < 0 )
-                {  i--;
-                    ss = 17;
-                }
-            }
-            }
-            i = 0;
-            while ( sfBandIndex[sfreq].l[i] <= sb )
-                i++;
-            sfb = i;
-            i = sfBandIndex[sfreq].l[i];
-            for ( ; sfb<8; sfb++ )
-            {  sb = sfBandIndex[sfreq].l[sfb+1]-sfBandIndex[sfreq].l[sfb];
-                for ( ; sb > 0; sb--)
-                {  is_pos[i] = (*scalefac)[1].l[sfb];
-                    if ( is_pos[i] != 7 )
-                        is_ratio[i] = tan( is_pos[i] * (PI / 12));
-                    i++;
-                }
-            }
-        }
-    } else
-    {  for ( j=0; j<3; j++ )
-    {  int sfbcnt;
-        sfbcnt = -1;
-        for( sfb=12; sfb >=0; sfb-- )
-        {  int lines;
-            lines = sfBandIndex[sfreq].s[sfb+1]-sfBandIndex[sfreq].s[sfb];
-            i = 3*sfBandIndex[sfreq].s[sfb] + (j+1) * lines - 1;
-            while ( lines > 0 )
-            {  if ( xr[1][i/SSLIMIT][i%SSLIMIT] != 0.0 )
-            {  sfbcnt = sfb;
-                sfb = -10;
-                lines = -10;
-            }
-                lines--;
-                i--;
-            }
-        }
-        sfb = sfbcnt + 1;
-        while( sfb<12 )
-        {  sb = sfBandIndex[sfreq].s[sfb+1]-sfBandIndex[sfreq].s[sfb];
-            i = 3*sfBandIndex[sfreq].s[sfb] + j * sb;
-            for ( ; sb > 0; sb--)
-            {  is_pos[i] = (*scalefac)[1].s[j][sfb];
-                if ( is_pos[i] != 7 )
-                    is_ratio[i] = tan( is_pos[i] * (PI / 12));
-                i++;
-            }
-            sfb++;
-        }
-        
-        sb = sfBandIndex[sfreq].s[11]-sfBandIndex[sfreq].s[10];
-        sfb = 3*sfBandIndex[sfreq].s[10] + j * sb;
-        sb = sfBandIndex[sfreq].s[12]-sfBandIndex[sfreq].s[11];
-        i = 3*sfBandIndex[sfreq].s[11] + j * sb;
-        for ( ; sb > 0; sb-- )
-        {  is_pos[i] = is_pos[sfb];
-            is_ratio[i] = is_ratio[sfb];
-            i++;
-        }
-    }
-    }
-    } else
-    {  i = 31;
-        ss = 17;
-        sb = 0;
-        while ( i >= 0 )
-        {  if ( xr[1][i][ss] != 0.0 )
-        {  sb = i*18+ss;
-            i = -1;
-        } else
-        {  ss--;
-            if ( ss < 0 )
-            {  i--;
-                ss = 17;
-            }
-        }
-        }
-        i = 0;
-        while ( sfBandIndex[sfreq].l[i] <= sb )
-            i++;
-        sfb = i;
-        i = sfBandIndex[sfreq].l[i];
-        for ( ; sfb<21; sfb++ )
-        {  sb = sfBandIndex[sfreq].l[sfb+1] - sfBandIndex[sfreq].l[sfb];
-            for ( ; sb > 0; sb--)
-            {  is_pos[i] = (*scalefac)[1].l[sfb];
-                if ( is_pos[i] != 7 )
-                    is_ratio[i] = tan( is_pos[i] * (PI / 12));
-                i++;
-            }
-        }
-        sfb = sfBandIndex[sfreq].l[20];
-        for ( sb = 576 - sfBandIndex[sfreq].l[21]; sb > 0; sb-- )
-        {  is_pos[i] = is_pos[sfb];
-            is_ratio[i] = is_ratio[sfb];
-            i++;
-        }
-    }
     }
     
-    for(ch=0;ch<2;ch++)
-        for(sb=0;sb<SBLIMIT;sb++)
-            for(ss=0;ss<SSLIMIT;ss++)
+    for(ch = 0; ch < 2; ch++) {
+        for(sb = 0; sb < SBLIMIT; sb++) {
+            for(ss = 0; ss < SSLIMIT; ss++) {
                 lr[ch][sb][ss] = 0;
+            }
+        }
+    }
     
-    if (stereo==2)
-        for(sb=0;sb<SBLIMIT;sb++)
-            for(ss=0;ss<SSLIMIT;ss++) {
-                i = (sb*18)+ss;
-                if ( is_pos[i] == 7 ) {
-                    if ( ms_stereo ) {
-                        lr[0][sb][ss] = (xr[0][sb][ss]+xr[1][sb][ss])/1.41421356;
-                        lr[1][sb][ss] = (xr[0][sb][ss]-xr[1][sb][ss])/1.41421356;
-                    }
-                    else {
+    if (stereo == 2) {
+        for(sb = 0; sb < SBLIMIT; sb++) {
+            for(ss = 0; ss < SSLIMIT; ss++) {
+                i = (sb * 18) + ss;
+                if (is_pos[i] == 7) {
+                    if (ms_stereo) {
+                        lr[0][sb][ss] = (xr[0][sb][ss] + xr[1][sb][ss]) / 1.41421356;
+                        lr[1][sb][ss] = (xr[0][sb][ss] - xr[1][sb][ss]) / 1.41421356;
+                    } else {
                         lr[0][sb][ss] = xr[0][sb][ss];
                         lr[1][sb][ss] = xr[1][sb][ss];
                     }
-                }
-                else if (i_stereo ) {
-                    lr[0][sb][ss] = xr[0][sb][ss] * (is_ratio[i]/(1+is_ratio[i]));
-                    lr[1][sb][ss] = xr[0][sb][ss] * (1/(1+is_ratio[i]));
-                }
-                else {
+                } else if (i_stereo) {
+                    lr[0][sb][ss] = xr[0][sb][ss] * (is_ratio[i] / (1 + is_ratio[i]));
+                    lr[1][sb][ss] = xr[0][sb][ss] * (1 / (1 + is_ratio[i]));
+                } else {
                     printf("Error in streo processing\n");
                 }
             }
-    else  /* mono , bypass xr[0][][] to lr[0][][]*/
-        for(sb=0;sb<SBLIMIT;sb++)
-            for(ss=0;ss<SSLIMIT;ss++)
+        }
+    } else {//mono , bypass xr[0][][] to lr[0][][]
+        for(sb = 0; sb < SBLIMIT; sb++) {
+            for(ss = 0; ss < SSLIMIT; ss++) {
                 lr[0][sb][ss] = xr[0][sb][ss];
+            }
+        }
+    }
     
 }
 
+double Ci[8] = {-0.6, -0.535, -0.33, -0.185, -0.095, -0.041, -0.0142, -0.0037};
 
-double Ci[8]={-0.6,-0.535,-0.33,-0.185,-0.095,-0.041,-0.0142,-0.0037};
-void III_antialias(double xr[SBLIMIT][SSLIMIT], double hybridIn[SBLIMIT][SSLIMIT], struct gr_info_s *gr_info, frame_params *fr_ps)
-{
+void III_antialias(double xr[SBLIMIT][SSLIMIT], double hybridIn[SBLIMIT][SSLIMIT], struct gr_info_s *gr_info, frame_params *fr_ps) {
     static int    init = 1;
-    static double ca[8],cs[8];
-    double        bu,bd;  /* upper and lower butterfly inputs */
-    int           ss,sb,sblim;
+    static double ca[8], cs[8];
+    double        bu, bd;//upper and lower butterfly inputs
+    int           ss, sb, sblim;
     
     if (init) {
         int i;
-        double    sq;
-        for (i=0;i<8;i++) {
-            sq=sqrt(1.0+Ci[i]*Ci[i]);
-            cs[i] = 1.0/sq;
-            ca[i] = Ci[i]/sq;
+        double sq;
+        for (i = 0; i  <8; i++) {
+            sq = sqrt(1.0 + Ci[i] * Ci[i]);
+            cs[i] = 1.0 / sq;
+            ca[i] = Ci[i] / sq;
         }
         init = 0;
     }
     
-    /* clear all inputs */
-    
-    for(sb=0;sb<SBLIMIT;sb++)
-        for(ss=0;ss<SSLIMIT;ss++)
+    //clear all inputs
+    for(sb = 0; sb < SBLIMIT; sb++) {
+        for(ss = 0; ss < SSLIMIT; ss++) {
             hybridIn[sb][ss] = xr[sb][ss];
-    
-    if  (gr_info->window_switching_flag && (gr_info->block_type == 2) &&
-         !gr_info->mixed_block_flag ) return;
-    
-    if ( gr_info->window_switching_flag && gr_info->mixed_block_flag &&
-        (gr_info->block_type == 2))
-        sblim = 1;
-    else
-        sblim = SBLIMIT-1;
-    
-    /* 31 alias-reduction operations between each pair of sub-bands */
-    /* with 8 butterflies between each pair                         */
-    
-    for(sb=0;sb<sblim;sb++)
-        for(ss=0;ss<8;ss++) {
-            bu = xr[sb][17-ss];
-            bd = xr[sb+1][ss];
-            hybridIn[sb][17-ss] = (bu * cs[ss]) - (bd * ca[ss]);
-            hybridIn[sb+1][ss] = (bd * cs[ss]) + (bu * ca[ss]);
         }
+    }
+    
+    if  (gr_info->window_switching_flag && (gr_info->block_type == 2) && !gr_info->mixed_block_flag) {
+        return;
+    }
+    
+    if (gr_info->window_switching_flag && gr_info->mixed_block_flag && (gr_info->block_type == 2)) {
+        sblim = 1;
+    } else {
+        sblim = SBLIMIT - 1;
+    }
+    
+    //31 alias-reduction operations between each pair of sub-bands
+    //with 8 butterflies between each pair
+    for(sb = 0; sb < sblim; sb++) {
+        for(ss = 0; ss < 8; ss++) {
+            bu = xr[sb][17 - ss];
+            bd = xr[sb + 1][ss];
+            hybridIn[sb][17 - ss] = (bu * cs[ss]) - (bd * ca[ss]);
+            hybridIn[sb + 1][ss] = (bd * cs[ss]) + (bu * ca[ss]);
+        }
+    }
 }
-
 
 /*------------------------------------------------------------------*/
 /*                                                                  */
@@ -670,84 +680,94 @@ void III_antialias(double xr[SBLIMIT][SSLIMIT], double hybridIn[SBLIMIT][SSLIMIT
 /*    New layer3                                                    */
 /*                                                                  */
 /*------------------------------------------------------------------*/
-void inv_mdct(double in[18], double out[36], int block_type)
-{
-    int     i,m,N,p;
-    double  tmp[12],sum;
+void inv_mdct(double in[18], double out[36], int block_type) {
+    int     i, m, N, p;
+    double  tmp[12], sum;
     static  double  win[4][36];
-    static  int init=0;
-    static  double COS[4*36];
+    static  int init = 0;
+    static  double COS[4 * 36];
     
-    if(init==0){
+    if(init == 0){
+        //type 0
+        for(i = 0; i < 36; i++) {
+            win[0][i] = sin(PI / 36 * (i + 0.5));
+        }
         
-        /* type 0 */
-        for(i=0;i<36;i++)
-            win[0][i] = sin( PI/36 *(i+0.5) );
-        
-        /* type 1*/
-        for(i=0;i<18;i++)
-            win[1][i] = sin( PI/36 *(i+0.5) );
-        for(i=18;i<24;i++)
+        //type 1
+        for(i = 0; i < 18; i++) {
+            win[1][i] = sin(PI/36 * (i + 0.5));
+        }
+        for(i = 18; i < 24; i++) {
             win[1][i] = 1.0;
-        for(i=24;i<30;i++)
-            win[1][i] = sin( PI/12 *(i+0.5-18) );
-        for(i=30;i<36;i++)
+        }
+        for(i = 24; i < 30; i++) {
+            win[1][i] = sin(PI/12 * (i + 0.5 - 18));
+        }
+        for(i = 30; i < 36; i++) {
             win[1][i] = 0.0;
+        }
         
-        /* type 3*/
-        for(i=0;i<6;i++)
+        //type 3
+        for(i = 0; i < 6; i++) {
             win[3][i] = 0.0;
-        for(i=6;i<12;i++)
-            win[3][i] = sin( PI/12 *(i+0.5-6) );
-        for(i=12;i<18;i++)
-            win[3][i] =1.0;
-        for(i=18;i<36;i++)
-            win[3][i] = sin( PI/36*(i+0.5) );
+        }
+        for(i = 6; i < 12; i++) {
+            win[3][i] = sin(PI / 12 * (i + 0.5 - 6));
+        }
+        for(i = 12; i < 18; i++) {
+            win[3][i] = 1.0;
+        }
+        for(i = 18; i < 36; i++) {
+            win[3][i] = sin(PI / 36 * (i + 0.5));
+        }
         
-        /* type 2*/
-        for(i=0;i<12;i++)
-            win[2][i] = sin( PI/12*(i+0.5) ) ;
-        for(i=12;i<36;i++)
-            win[2][i] = 0.0 ;
-        
-        for (i=0; i<4*36; i++)
-            COS[i] = cos(PI/(2*36) * i);
+        //type 2
+        for(i = 0; i < 12; i++) {
+            win[2][i] = sin(PI / 12 * (i + 0.5));
+        }
+        for(i = 12; i < 36; i++) {
+            win[2][i] = 0.0;
+        }
+        for (i = 0; i < 4 * 36; i++) {
+            COS[i] = cos(PI / (2 * 36) * i);
+        }
         
         init++;
     }
     
-    for(i=0;i<36;i++)
-        out[i]=0;
+    for(i = 0; i < 36; i++) {
+        out[i] = 0;
+    }
     
     if(block_type == 2){
-        N=12;
-        for(i=0;i<3;i++){
-            for(p= 0;p<N;p++){
+        N = 12;
+        for(i = 0; i < 3; i++){
+            for(p = 0; p < N; p++){
                 sum = 0.0;
-                for(m=0;m<N/2;m++)
-                    sum += in[i+3*m] * cos( PI/(2*N)*(2*p+1+N/2)*(2*m+1) );
+                for(m = 0; m < N / 2; m++) {
+                    sum += in[i + 3 * m] * cos(PI / (2 * N) * (2 * p + 1 + N / 2) * (2 * m + 1));
+                }
                 tmp[p] = sum * win[block_type][p] ;
             }
-            for(p=0;p<N;p++)
-                out[6*i+p+6] += tmp[p];
+            for(p = 0; p < N; p++) {
+                out[6 * i + p + 6] += tmp[p];
+            }
         }
-    }
-    else{
-        N=36;
-        for(p= 0;p<N;p++){
+    } else {
+        N = 36;
+        for(p = 0; p < N; p++){
             sum = 0.0;
-            for(m=0;m<N/2;m++)
-                sum += in[m] * COS[((2*p+1+N/2)*(2*m+1))%(4*36)];
+            for(m = 0; m < N / 2; m++) {
+                sum += in[m] * COS[((2 * p + 1 + N / 2) * (2 * m + 1)) % (4 * 36)];
+            }
             out[p] = sum * win[block_type][p];
         }
     }
 }
 
-
-void III_hybrid(double fsIn[SSLIMIT], double tsOut[SSLIMIT], int sb, int ch, struct gr_info_s *gr_info, frame_params *fr_ps)
-/* fsIn:freq samples per subband in */
-/* tsOut:time samples per subband out */
-{
+//fsIn:freq samples per subband in
+//tsOut:time samples per subband out
+void III_hybrid(double fsIn[SSLIMIT], double tsOut[SSLIMIT], int sb, int ch, struct gr_info_s *gr_info, frame_params *fr_ps) {
     int ss;
     double rawout[36];
     static double prevblck[2][SBLIMIT][SSLIMIT];
@@ -755,121 +775,126 @@ void III_hybrid(double fsIn[SSLIMIT], double tsOut[SSLIMIT], int sb, int ch, str
     int bt;
     
     if (init) {
-        int i,j,k;
+        int i, j, k;
         
-        for(i=0;i<2;i++)
-            for(j=0;j<SBLIMIT;j++)
-                for(k=0;k<SSLIMIT;k++)
-                    prevblck[i][j][k]=0.0;
+        for(i = 0; i < 2; i++) {
+            for(j = 0; j < SBLIMIT; j++) {
+                for(k = 0; k < SSLIMIT; k++) {
+                    prevblck[i][j][k] = 0.0;
+                }
+            }
+        }
         init = 0;
     }
     
-    bt = (gr_info->window_switching_flag && gr_info->mixed_block_flag &&
-          (sb < 2)) ? 0 : gr_info->block_type;
+    bt = (gr_info->window_switching_flag && gr_info->mixed_block_flag && (sb < 2)) ? 0 : gr_info->block_type;
     
     inv_mdct( fsIn, rawout, bt);
     
-    /* overlap addition */
-    for(ss=0; ss<SSLIMIT; ss++) {
+    for(ss = 0; ss < SSLIMIT; ss++) {//overlap addition
         tsOut[ss] = rawout[ss] + prevblck[ch][sb][ss];
-        prevblck[ch][sb][ss] = rawout[ss+18];
+        prevblck[ch][sb][ss] = rawout[ss + 18];
     }
 }
-
 
 //Pass the subband sample through the synthesis window
 //create in synthesis filter
 void create_syn_filter(double filter[64][SBLIMIT]) {
-    register int i,k;
+    register int i, k;
     
-    for (i=0; i<64; i++)
-        for (k=0; k<32; k++) {
-            if ((filter[i][k] = 1e9*cos((double)((PI64*i+PI4)*(2*k+1)))) >= 0)
-                modf(filter[i][k]+0.5, &filter[i][k]);
-            else
-                modf(filter[i][k]-0.5, &filter[i][k]);
+    for (i = 0; i < 64; i++) {
+        for (k = 0; k < 32; k++) {
+            if ((filter[i][k] = 1e9 * cos((double)((PI64 * i + PI4) * (2 * k + 1)))) >= 0) {
+                modf(filter[i][k] + 0.5, &filter[i][k]);
+            } else {
+                modf(filter[i][k] - 0.5, &filter[i][k]);
+            }
             filter[i][k] *= 1e-9;
         }
+    }
 }
-
 
 //Window the restored sample
 //read in synthesis window
 void read_syn_window(double window[HAN_SIZE]) {
-    int i,j[4];
+    int i, j[4];
     FILE *fp;
     double f[4];
     char t[150];
     
-    if (!(fp = openTableFile("/Users/weidong_wu/mp3_decode/dewindow.txt") )) {
+    if (!(fp = openTableFile("/Users/weidong_wu/mp3_decode/dewindow.txt"))) {
         printf("Please check synthesis window table 'dewindow.txt'\n");
         exit(1);
     }
-    for (i=0;i<512;i+=4) {
+    
+    for (i = 0; i < 512; i += 4) {
         fgets(t, 150, fp);
-        sscanf(t,"D[%d] = %lf D[%d] = %lf D[%d] = %lf D[%d] = %lf\n",
-               j, f,j+1,f+1,j+2,f+2,j+3,f+3);
-        if (i==j[0]) {
+        sscanf(t,"D[%d] = %lf D[%d] = %lf D[%d] = %lf D[%d] = %lf\n", j, f, j + 1, f + 1, j + 2, f + 2, j + 3, f + 3);
+        if (i == j[0]) {
             window[i] = f[0];
-            window[i+1] = f[1];
-            window[i+2] = f[2];
-            window[i+3] = f[3];
-        }
-        else {
+            window[i +1 ] = f[1];
+            window[i + 2] = f[2];
+            window[i + 3] = f[3];
+        } else {
             printf("Check index in synthesis window table\n");
             exit(1);
         }
-        fgets(t,150,fp);
+        fgets(t, 150, fp);
     }
     fclose(fp);
 }
 
-int SubBandSynthesis (double *bandPtr, int channel, short *samples)
-{
-    register int i,j,k;
+int SubBandSynthesis (double *bandPtr, int channel, short *samples) {
+    register int i, j, k;
     register double *bufOffsetPtr, sum;
     static int init = 1;
     typedef double NN[64][32];
     static NN *filter;
-    typedef double BB[2][2*HAN_SIZE];
+    typedef double BB[2][2 * HAN_SIZE];
     static BB *buf;
-    static int bufOffset[2] = {64,64};
+    static int bufOffset[2] = {64, 64};
     static double *window;
-    int clip = 0;               /* count & return how many samples clipped */
+    int clip = 0;//count & return how many samples clipped
     
     if (init) {
-        buf = (BB *) mem_alloc(sizeof(BB),"BB");
+        buf = (BB *) mem_alloc(sizeof(BB), "BB");
         filter = (NN *) mem_alloc(sizeof(NN), "NN");
         create_syn_filter(*filter);
         window = (double *) mem_alloc(sizeof(double) * HAN_SIZE, "WIN");
         read_syn_window(window);
         init = 0;
     }
-    /*    if (channel == 0) */
+    //if (channel == 0)
     bufOffset[channel] = (bufOffset[channel] - 64) & 0x3ff;
     bufOffsetPtr = &((*buf)[channel][bufOffset[channel]]);
     
-    for (i=0; i<64; i++) {
+    for (i = 0; i < 64; i++) {
         sum = 0;
-        for (k=0; k<32; k++)
+        for (k = 0; k < 32; k++) {
             sum += bandPtr[k] * (*filter)[i][k];
+        }
         bufOffsetPtr[i] = sum;
     }
-    /*  S(i,j) = D(j+32i) * U(j+32i+((i+1)>>1)*64)  */
-    /*  samples(i,j) = MWindow(j+32i) * bufPtr(j+32i+((i+1)>>1)*64)  */
-    for (j=0; j<32; j++) {
+    //S(i,j) = D(j+32i) * U(j+32i+((i+1)>>1)*64)
+    //samples(i,j) = MWindow(j+32i) * bufPtr(j+32i+((i+1)>>1)*64)
+    for (j = 0; j < 32; j++) {
         sum = 0;
-        for (i=0; i<16; i++) {
-            k = j + (i<<5);
-            sum += window[k] * (*buf) [channel] [( (k + ( ((i+1)>>1) <<6) ) +
-                                                  bufOffset[channel]) & 0x3ff];
+        for (i = 0; i < 16; i++) {
+            k = j + (i << 5);
+            sum += window[k] * (*buf)[channel][((k + (((i + 1) >> 1) << 6)) + bufOffset[channel]) & 0x3ff];
         }
         {
-            /*long foo = (sum > 0) ? sum * SCALE + 0.5 : sum * SCALE - 0.5; */
+            //long foo = (sum > 0) ? sum * SCALE + 0.5 : sum * SCALE - 0.5;
             long foo = sum * SCALE;
-            if (foo >= (long) SCALE)      {samples[j] = SCALE-1; ++clip;}
-            else if (foo < (long) -SCALE) {samples[j] = -SCALE;  ++clip;}
-            else                           samples[j] = foo;
+            if (foo >= (long)SCALE) {
+                samples[j] = SCALE - 1;
+                ++clip;
+            } else if (foo < (long)-SCALE) {
+                samples[j] = -SCALE;
+                ++clip;
+            } else {
+                samples[j] = foo;
+            }
         }
     }
     return(clip);
@@ -900,11 +925,9 @@ void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, frame_params *fr_p
     }
 }
 
-
 void buffer_CRC(Bit_stream_struc *bs, unsigned int *old_crc) {
     *old_crc = (unsigned int)getbits(bs, 16);
 }
-
 
 extern int bitrate[3][15];
 extern double s_freq[4];
