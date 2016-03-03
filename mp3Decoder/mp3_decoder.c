@@ -17,44 +17,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "wav.h"
 #include "common.h"
 #include "decode.h"
-
-void writeString(FILE *f, char *buf) {
-    fwrite(buf, strlen(buf), 1, f);
-}
-
-void writeInt(FILE *f, int i) {
-    fwrite(&i, sizeof(i), 1, f);
-}
-
-void writeShort(FILE *f, short i) {
-    fwrite(&i, sizeof(i), 1, f);
-}
-
-void writeWAVHeader(FILE *f) {
-    int len = 80 * 1024 * 1024;
-    short channels = 2;
-    
-    //RIFF header
-    writeString(f, "RIFF");//riff id
-    writeInt(f, len - 8);//riff chunk size *PLACEHOLDER*
-    writeString(f, "WAVE");//wave type
-    
-    //fmt chunk
-    writeString(f, "fmt ");//fmt id
-    writeInt(f, 16);//fmt chunk size
-    writeShort(f, 1);//format: 1(PCM)
-    writeShort(f, channels);//channels
-    writeInt(f, 44100);//samples per second
-    writeInt(f, (int) (channels * 44100 * (16 / 8)));//BPSecond
-    writeShort(f, (short) (channels * (16 / 8)));//BPSample
-    writeShort(f, (short) (16));//bPSample
-    
-    //data chunk
-    writeString(f, "data");//data id
-    writeInt(f, len - 44);//data chunk size *PLACEHOLDER*
-}
 
 int main(int argc, char**argv) {
     char *mp3_filename = "/Users/weidong_wu/mp3_decode/mymp3.mp3";

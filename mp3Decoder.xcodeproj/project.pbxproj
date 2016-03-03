@@ -29,6 +29,7 @@
 		2060CA711C7EDF10005B8DC0 /* huffdec.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = huffdec.txt; sourceTree = "<group>"; };
 		2060CA721C7EDF10005B8DC0 /* mymp3.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = mymp3.mp3; sourceTree = "<group>"; };
 		2060CA731C7EDF72005B8DC0 /* dewindow.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dewindow.txt; sourceTree = "<group>"; };
+		20631D9C1C87E8E9007F0EBE /* MPEG-1_Audio_CD.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "MPEG-1_Audio_CD.pdf"; sourceTree = "<group>"; };
 		2063EA451C7DA84F00BAC755 /* mp3Decoder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mp3Decoder; sourceTree = BUILT_PRODUCTS_DIR; };
 		2063EA501C7DA88D00BAC755 /* mp3_decoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mp3_decoder.c; sourceTree = "<group>"; };
 		2063EA521C7DA8F200BAC755 /* huffman.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = huffman.c; sourceTree = "<group>"; };
@@ -37,8 +38,6 @@
 		2063EA561C7DA94C00BAC755 /* decode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = decode.h; sourceTree = "<group>"; };
 		2063EA581C7DAE4000BAC755 /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		2063EA591C7DAF3000BAC755 /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = common.c; sourceTree = "<group>"; };
-		2063EA5B1C7DBD3B00BAC755 /* huff.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = huff.h; sourceTree = "<group>"; };
-		B71187471C82DA9000B0F363 /* qingyuyi.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = qingyuyi.wav; sourceTree = "<group>"; };
 		B71187481C82E7A500B0F363 /* wav.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wav.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -56,10 +55,10 @@
 		2063EA3C1C7DA84F00BAC755 = {
 			isa = PBXGroup;
 			children = (
-				2060CA731C7EDF72005B8DC0 /* dewindow.txt */,
+				20631D9C1C87E8E9007F0EBE /* MPEG-1_Audio_CD.pdf */,
 				2060CA711C7EDF10005B8DC0 /* huffdec.txt */,
+				2060CA731C7EDF72005B8DC0 /* dewindow.txt */,
 				2060CA721C7EDF10005B8DC0 /* mymp3.mp3 */,
-				B71187471C82DA9000B0F363 /* qingyuyi.wav */,
 				2063EA471C7DA84F00BAC755 /* mp3Decoder */,
 				2063EA461C7DA84F00BAC755 /* Products */,
 			);
@@ -79,7 +78,6 @@
 				B71187481C82E7A500B0F363 /* wav.h */,
 				2063EA581C7DAE4000BAC755 /* common.h */,
 				2063EA591C7DAF3000BAC755 /* common.c */,
-				2063EA5B1C7DBD3B00BAC755 /* huff.h */,
 				2063EA531C7DA8F200BAC755 /* huffman.h */,
 				2063EA521C7DA8F200BAC755 /* huffman.c */,
 				2063EA561C7DA94C00BAC755 /* decode.h */,

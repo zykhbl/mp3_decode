@@ -13,9 +13,9 @@
 
 char *layer_names[3] = {"I", "II", "III"};
 int bitrate[3][15] = {
-    {0,32,64,96,128,160,192,224,256,288,320,352,384,416,448},
-    {0,32,48,56,64,80,96,112,128,160,192,224,256,320,384},
-    {0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}
+    {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448},
+    {0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384},
+    {0, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320}
 };
 double s_freq[4] = {44.1, 48, 32, 0};
 char *mode_names[4] = {"stereo", "j-stereo", "dual-ch", "single-ch"};
@@ -59,7 +59,7 @@ void *mem_alloc(unsigned long block, char *item) {
     return ptr;
 }
 
-/* open and initialize the buffer */
+//open and initialize the buffer
 void alloc_buffer(Bit_stream_struc *bs, int size) {
     bs->buf = (unsigned char *) mem_alloc(size * sizeof(unsigned char), "buffer");
     bs->buf_size = size;
@@ -69,7 +69,7 @@ void desalloc_buffer(Bit_stream_struc *bs) {
     free(bs->buf);
 }
 
-/* open the device to read the bit stream from it */
+//open the device to read the bit stream from it
 void open_bit_stream_r(Bit_stream_struc *bs, char *bs_filenam, int size) {
     if ((bs->pt = fopen(bs_filenam, "rb")) == NULL) {
         printf("Could not find \"%s\".\n", bs_filenam);
@@ -91,19 +91,17 @@ void close_bit_stream_r(Bit_stream_struc *bs) {
     desalloc_buffer(bs);
 }
 
-/*return the status of the bit stream*/
-/* returns 1 if end of bit stream was reached */
-/* returns 0 if end of bit stream was not reached */
+//return the status of the bit stream
+//returns 1 if end of bit stream was reached
+//returns 0 if end of bit stream was not reached
 int end_bs(Bit_stream_struc *bs) {
     return(bs->eobs);
 }
 
-
-/*return the current bit stream length (in bits)*/
+//return the current bit stream length (in bits)
 unsigned long sstell(Bit_stream_struc *bs) {
     return(bs->totbit);
 }
-
 
 void refill_buffer(Bit_stream_struc *bs) {
     register int i = bs->buf_size - 2 - bs->buf_byte_idx;
@@ -117,10 +115,9 @@ void refill_buffer(Bit_stream_struc *bs) {
     }
 }
 
-
 int mask[8]={0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80};
 
-/*read 1 bit from the bit stream */
+//read 1 bit from the bit stream
 unsigned int get1bit(Bit_stream_struc *bs) {
     unsigned int bit;
     register int i;
@@ -150,7 +147,7 @@ unsigned int get1bit(Bit_stream_struc *bs) {
 
 int putmask[9]={0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
 
-/*read N bit from the bit stream */
+//read N bit from the bit stream
 unsigned long getbits(Bit_stream_struc *bs, int N) {
     unsigned long val = 0;
     register int i;
@@ -213,10 +210,10 @@ int seek_sync(Bit_stream_struc *bs, unsigned long sync, int N) {
 
 int js_bound(int lay, int m_ext) {
     static int jsb_table[3][4] =  {
-        { 4, 8, 12, 16 },
-        { 4, 8, 12, 16},
-        { 0, 4, 8, 16}
-    };  /* lay+m_e -> jsbound */
+        {4, 8, 12, 16},
+        {4, 8, 12, 16},
+        {0, 4,  8, 16}
+    };//lay + m_e->jsbound
     
     if(lay < 1 || lay > 3 || m_ext < 0 || m_ext > 3) {
         fprintf(stderr, "js_bound bad layer/modext (%d/%d)\n", lay, m_ext);
@@ -225,9 +222,9 @@ int js_bound(int lay, int m_ext) {
     return(jsb_table[lay - 1][m_ext]);
 }
 
-/* interpret data in hdr str to fields in fr_ps */
+//interpret data in hdr str to fields in fr_ps
 void hdr_to_frps(frame_params *fr_ps) {
-    layer *hdr = fr_ps->header;     /* (or pass in as arg?) */
+    layer *hdr = fr_ps->header;//(or pass in as arg?)
     
     fr_ps->actual_mode = hdr->mode;
     fr_ps->stereo = (hdr->mode == MPG_MD_MONO) ? 1 : 2;

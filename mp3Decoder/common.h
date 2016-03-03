@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 
-/* MPEG Header Definitions - Mode Values */
+//MPEG Header Definitions - Mode Values
 #define	MPG_MD_STEREO           0
 #define	MPG_MD_JOINT_STEREO     1
 #define	MPG_MD_DUAL_CHANNEL     2
@@ -22,11 +22,11 @@
 
 #define	ALIGNING			8
 
-#define	MINIMUM				4    /* Minimum size of the buffer in bytes */
-#define	MAX_LENGTH			32	/* Maximum length of word written or read from bit stream */
+#define	MINIMUM				4  // Minimum size of the buffer in bytes
+#define	MAX_LENGTH			32 //Maximum length of word written or read from bit stream
 
-#define	BINARY				0	/*Binary input file*/
-#define	READ_MODE			0	/*Decode mode only*/
+#define	BINARY				0  //Binary input file
+#define	READ_MODE			0  //Decode mode only
 
 #define	FALSE				0
 #define	TRUE				1
@@ -59,29 +59,29 @@ typedef struct {//帧头格式:4字节(32位：11111111111...(12个1开头))
 } layer, *the_layer;
 
 
-/* Parent Structure Interpreting some Frame Parameters in Header */
+//Parent Structure Interpreting some Frame Parameters in Header
 typedef struct {
-    layer       *header;        /* raw header information */
-    int         actual_mode;    /* when writing IS, may forget if 0 chs */
-    int         stereo;         /* 1 for mono, 2 for stereo */
-    int         jsbound;        /* first band of joint stereo coding */
-    int         sblimit;        /* total number of sub bands */
+    layer       *header;        //raw header information
+    int         actual_mode;    //when writing IS, may forget if 0 chs
+    int         stereo;         //1 for mono, 2 for stereo
+    int         jsbound;        //first band of joint stereo coding
+    int         sblimit;        //total number of sub bands
 } frame_params;
 
 typedef struct  bit_stream_struc {
-    FILE            *pt;            /* pointer to bit stream device */
-    unsigned char   *buf;         /* bit stream buffer */
-    int             buf_size;       /* size of buffer (in number of bytes) */
-    long            totbit;         /* bit counter of bit stream */
-    int             buf_byte_idx;   /* pointer to top byte in buffer */
-    int             buf_bit_idx;    /* pointer to top bit of top byte in buffer */
-    int             mode;           /* bit stream open in read or write mode */
-    int             eob;            /* end of buffer index */
-    int             eobs;           /* end of bit stream flag */
-    char            format;         /* format of file in rd mode (BINARY/ASCII) */
+    FILE            *pt;            //pointer to bit stream device
+    unsigned char   *buf;           //bit stream buffer
+    int             buf_size;       //size of buffer (in number of bytes)
+    long            totbit;         //bit counter of bit stream
+    int             buf_byte_idx;   //pointer to top byte in buffer
+    int             buf_bit_idx;    //pointer to top bit of top byte in buffer
+    int             mode;           //bit stream open in read or write mode
+    int             eob;            //end of buffer index
+    int             eobs;           //end of bit stream flag
+    char            format;         //format of file in rd mode (BINARY/ASCII)
 } Bit_stream_struc;
 
-/* Layer III side information. */
+//Layer III side information
 typedef struct {
     unsigned main_data_begin;
     unsigned private_bits;
@@ -107,9 +107,9 @@ typedef struct {
 } III_side_info_t;
 
 typedef struct {
-    int l[23];			/* [cb] */
-    int s[3][13];		/* [window][cb] */
-} III_scalefac_t[2];	/* [ch] */
+    int l[23];			//[cb]
+    int s[3][13];		//[window][cb]
+} III_scalefac_t[2];	//[ch]
 
 FILE *openTableFile(char *name);
 
