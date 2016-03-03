@@ -236,8 +236,9 @@ void III_hufman_decode(long int is[SBLIMIT][SSLIMIT], III_side_info_t *si, int c
         region2Start = sfBandIndex[fr_ps->header->sampling_frequency].l[(*si).ch[ch].gr[gr].region0_count + (*si).ch[ch].gr[gr].region1_count + 2];//MI
     }
     
-    //为了使格组量化频谱系数所需的比特数最少，无噪声编码把一组576个量化频谱系数分成3个region（由低频到高频分别为big_value区，count1区，zero区），每个region一个霍夫曼码书
-    //其中：big_value区又分为 子区0，子区1，子区2，使用不同边信息 III_side_info_t 里的 table_select 选择适当的huffman码表
+    //为了使各组量化频谱系数所需的比特数最少，无噪声编码把一组576个量化频谱系数分成3个region（由低频到高频分别为big_value区，count1区，zero区），每个region一个霍夫曼码书
+    //其中：big_value区又分为 子区0，子区1，子区2，使用边信息 III_side_info_t 里不同的 table_select 选择适当的huffman码表
+    //码流从右往左，先解big_value区，再解count1区，最后解zero区
     
     for (i = 0; i < (*si).ch[ch].gr[gr].big_values * 2; i += 2) {//Read bigvalues area（big_value区一个huffman码字表示2个量化系数，使用32个huffman表）
         if (i < region1Start) {
@@ -266,16 +267,16 @@ void III_hufman_decode(long int is[SBLIMIT][SSLIMIT], III_side_info_t *si, int c
         i += 4;
     }
     
-    if (hsstell() > part2_start + (*si).ch[ch].gr[gr].part2_3_length) {
+    if (hsstell() > part2_start + (*si).ch[ch].gr[gr].part2_3_length) {//使用了不属于count1区，而是zero区的位，所以要回退到count1区最后一个可用位的结束位置
         i -= 4;
         rewindNbits((int)(hsstell() - part2_start - (*si).ch[ch].gr[gr].part2_3_length));
     }
     
-    if (hsstell() < part2_start + (*si).ch[ch].gr[gr].part2_3_length) {//Dismiss stuffing Bits
+    if (hsstell() < part2_start + (*si).ch[ch].gr[gr].part2_3_length) {//Dismiss stuffing Bits（丢弃count1区剩余的位）
         hgetbits((int)(part2_start + (*si).ch[ch].gr[gr].part2_3_length - hsstell()));
     }
     
-    for (; i < SSLIMIT * SBLIMIT; i++) {//Zero out rest（zero区不用解码。表示余下子带谱线值全为0）
+    for (; i < SSLIMIT * SBLIMIT; i++) {//zero out rest（zero区不用解码。表示余下子带谱线值全为0）
         is[i / SSLIMIT][i % SSLIMIT] = 0;
     }
 }

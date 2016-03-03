@@ -42,7 +42,7 @@ int read_decoder_table(FILE *fi) {
     for (n = 0; n < HTN; n++) {//table number treelen xlen ylen linbits
         do {
             fgets(line, 99, fi);//读取一行，huffdec.txt文件里一行最多70多个字节，所以不会出现截断一行的问题
-        } while ((line[0] == '#') || (line[0] < ' '));//去掉注释或空白行（空白行时，line[0] = '\0'，为空字节）
+        } while ((line[0] == '#') || (line[0] < ' '));//去掉注释或空白行（空白行时，line[0] = '\n'，为换行符）
         
         //把line中的数据按照格式读入command 和 ht[n]中
         sscanf(line, "%s %s %u %u %u %u", command, ht[n].tablename, &ht[n].treelen, &ht[n].xlen, &ht[n].ylen, &ht[n].linbits);
@@ -147,7 +147,7 @@ int huffman_decoder(struct huffcodetab *h, int *x, int *y, int *v, int *w) {
         *y = (h->ylen - (1 << 1));
     }
     
-    //为了使格组量化频谱系数所需的比特数最少，无噪声编码把一组576个量化频谱系数分成3个region（由低频到高频分别为big_value区，count1区，zero区），每个region一个霍夫曼码书
+    //为了使各组量化频谱系数所需的比特数最少，无噪声编码把一组576个量化频谱系数分成3个region（由低频到高频分别为big_value区，count1区，zero区），每个region一个霍夫曼码书
     
     //Process sign encodings for quadruples tables（count1区一个huffman码字表示4个量化系数，一共使用了2本码书）
     if (h->tablename[0] == '3' && (h->tablename[1] == '2' || h->tablename[1] == '3')) {
@@ -190,23 +190,22 @@ int huffman_decoder(struct huffcodetab *h, int *x, int *y, int *v, int *w) {
 //        //removed 11/11/92 -ag
 //         {int i=*x; *x=*y; *y=i;}
 
-        //在huffman码字后是每个非零残差谱线的符号位
-        if (h->linbits) {
+        if (h->linbits) {// ??
             if ((h->xlen - 1) == *x) {
                 *x += hgetbits(h->linbits);
             }
         }
-        if (*x) {
+        if (*x) {//在huffman码字后是每个非零残差谱线的符号位
             if (hget1bit() == 1) {
                 *x = -*x;
             }
         }
-        if (h->linbits) {
+        if (h->linbits) {// ??
             if ((h->ylen-1) == *y) {
                 *y += hgetbits(h->linbits);
             }
         }
-        if (*y) {
+        if (*y) {//在huffman码字后是每个非零残差谱线的符号位
             if (hget1bit() == 1) {
                 *y = -*y;
             }
