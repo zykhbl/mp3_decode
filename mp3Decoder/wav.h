@@ -20,9 +20,9 @@ typedef struct {
     int     fmt_size;
     short   format;
     short   channels;
-    int     sample_freq;
+    int     frequency;
     int     bitRate;
-    short   bitSample;
+    short   sampling_frequency;
     short   bits;
     char    data[4];
     int     data_size;

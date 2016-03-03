@@ -11,6 +11,7 @@
 //http://www.jianshu.com/p/1d1f893e53e9
 //http://www.cnblogs.com/gaozehua/tag/音频编码/
 //http://standards.iso.org/ittf/PubliclyAvailableStandards/
+//http://usr.cc/article-1006-1.html
 
 //printf("\n1: totbit = %ld, frame_start = %d, main_data_end = %d, main_data_begin = %d, bytes_to_discard = %d \n", hsstell() / 8, frame_start, main_data_end, III_side_info.main_data_begin, bytes_to_discard);
 
@@ -133,7 +134,7 @@ int main(int argc, char**argv) {
 
                         III_get_scale_factors(&III_scalefac, &III_side_info, gr, ch, &fr_ps);//获取比例因子
 
-                        III_hufman_decode(is, &III_side_info, ch, gr, part2_start, &fr_ps);//Huffman解码
+                        III_hufman_decode(is, &III_side_info, ch, gr, part2_start, &fr_ps);//huffman解码
 
                         III_dequantize_sample(is, ro[ch], &III_scalefac, &(III_side_info.ch[ch].gr[gr]), ch, &fr_ps);//反量化采样
                     }

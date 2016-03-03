@@ -15,7 +15,7 @@
 void decode_info(Bit_stream_struc *bs, frame_params *fr_ps) {
     layer *hdr = fr_ps->header;
     
-    hdr->version = get1bit(bs);// 00-MPEG 2.5; 01-未定义; 10-MPEG 2; 11-MPEG 1
+    hdr->version = get1bit(bs);// 0-保留的; 1-MPEG
     hdr->lay = 4 - (int)getbits(bs, 2); // 00-未定义; 01-Layer 3; 10-Layer 2; 11-Layer 1
     hdr->error_protection = !get1bit(bs); // 0转为TRUE，检验；1转为FALSE，不校验
     hdr->bitrate_index = (int)getbits(bs, 4);
@@ -281,92 +281,81 @@ void III_hufman_decode(long int is[SBLIMIT][SSLIMIT], III_side_info_t *si, int c
     }
 }
 
-
-int pretab[22] = {0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2,2,3,3,3,2,0};
+int pretab[22] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0};
 
 void III_dequantize_sample(long int is[SBLIMIT][SSLIMIT], double xr[SBLIMIT][SSLIMIT], III_scalefac_t *scalefac, struct gr_info_s *gr_info, int ch, frame_params *fr_ps) {
-    int ss,sb,cb=0,sfreq=fr_ps->header->sampling_frequency;
-    int stereo = fr_ps->stereo;
-    int next_cb_boundary, cb_begin, cb_width, sign;
+    int ss, sb, cb = 0, sfreq = fr_ps->header->sampling_frequency;
+    int next_cb_boundary, cb_begin = 0, cb_width = 0, sign;
     
-    /* choose correct scalefactor band per block type, initalize boundary */
-    
-    if (gr_info->window_switching_flag && (gr_info->block_type == 2) )
-        if (gr_info->mixed_block_flag)
-            next_cb_boundary=sfBandIndex[sfreq].l[1];  /* LONG blocks: 0,1,3 */
-        else {
-            next_cb_boundary=sfBandIndex[sfreq].s[1]*3; /* pure SHORT block */
+    //choose correct scalefactor band per block type, initalize boundary
+    if (gr_info->window_switching_flag && (gr_info->block_type == 2)) {
+        if (gr_info->mixed_block_flag) {
+            next_cb_boundary = sfBandIndex[sfreq].l[1];//Mix block
+        } else {
+            next_cb_boundary = sfBandIndex[sfreq].s[1] * 3;//pure SHORT block
             cb_width = sfBandIndex[sfreq].s[1];
             cb_begin = 0;
         }
-        else
-            next_cb_boundary=sfBandIndex[sfreq].l[1];  /* LONG blocks: 0,1,3 */
+    } else {
+            next_cb_boundary = sfBandIndex[sfreq].l[1];//LONG blocks: 0, 1, 3
+    }
     
-    /* apply formula per block type */
-    for (sb=0 ; sb < SBLIMIT ; sb++) {
-        for (ss=0 ; ss < SSLIMIT ; ss++) {
-            if ( (sb*18)+ss == next_cb_boundary) { /* Adjust critical band boundary */
+    //apply formula per block type
+    for (sb = 0; sb < SBLIMIT; sb++) {
+        for (ss = 0; ss < SSLIMIT; ss++) {
+            if ((sb * 18) + ss == next_cb_boundary) {//Adjust critical band boundary
                 if (gr_info->window_switching_flag && (gr_info->block_type == 2)) {
                     if (gr_info->mixed_block_flag) {
-                        if (((sb*18)+ss) == sfBandIndex[sfreq].l[8])  {
-                            next_cb_boundary=sfBandIndex[sfreq].s[4]*3;
+                        if (((sb * 18) + ss) == sfBandIndex[sfreq].l[8]) {
+                            next_cb_boundary = sfBandIndex[sfreq].s[4] * 3;
                             cb = 3;
-                            cb_width = sfBandIndex[sfreq].s[cb+1] -
-                            sfBandIndex[sfreq].s[cb];
-                            cb_begin = sfBandIndex[sfreq].s[cb]*3;
+                            cb_width = sfBandIndex[sfreq].s[cb + 1] - sfBandIndex[sfreq].s[cb];
+                            cb_begin = sfBandIndex[sfreq].s[cb] * 3;
+                        } else if (((sb * 18) + ss) < sfBandIndex[sfreq].l[8]) {
+                            next_cb_boundary = sfBandIndex[sfreq].l[(++cb) + 1];
+                        } else {
+                            next_cb_boundary = sfBandIndex[sfreq].s[(++cb) + 1] * 3;
+                            cb_width = sfBandIndex[sfreq].s[cb + 1] - sfBandIndex[sfreq].s[cb];
+                            cb_begin = sfBandIndex[sfreq].s[cb] * 3;
                         }
-                        else if (((sb*18)+ss) < sfBandIndex[sfreq].l[8])
-                            next_cb_boundary = sfBandIndex[sfreq].l[(++cb)+1];
-                        else {
-                            next_cb_boundary = sfBandIndex[sfreq].s[(++cb)+1]*3;
-                            cb_width = sfBandIndex[sfreq].s[cb+1] -
-                            sfBandIndex[sfreq].s[cb];
-                            cb_begin = sfBandIndex[sfreq].s[cb]*3;
-                        }
+                    } else {
+                        next_cb_boundary = sfBandIndex[sfreq].s[(++cb) + 1] * 3;
+                        cb_width = sfBandIndex[sfreq].s[cb + 1] - sfBandIndex[sfreq].s[cb];
+                        cb_begin = sfBandIndex[sfreq].s[cb] * 3;
                     }
-                    else {
-                        next_cb_boundary = sfBandIndex[sfreq].s[(++cb)+1]*3;
-                        cb_width = sfBandIndex[sfreq].s[cb+1] -
-                        sfBandIndex[sfreq].s[cb];
-                        cb_begin = sfBandIndex[sfreq].s[cb]*3;
-                    }
+                } else {//long blocks
+                    next_cb_boundary = sfBandIndex[sfreq].l[(++cb) + 1];
                 }
-                else /* long blocks */
-                    next_cb_boundary = sfBandIndex[sfreq].l[(++cb)+1];
             }
             
-            /* Compute overall (global) scaling. */
-            xr[sb][ss] = pow( 2.0 , (0.25 * (gr_info->global_gain - 210.0)));
+            //Compute overall (global) scaling
+            xr[sb][ss] = pow(2.0, (0.25 * (gr_info->global_gain - 210.0)));
             
-            /* Do long/short dependent scaling operations. */
-            
-            if (gr_info->window_switching_flag && (
-                                                   ((gr_info->block_type == 2) && (gr_info->mixed_block_flag == 0)) ||
-                                                   ((gr_info->block_type == 2) && gr_info->mixed_block_flag && (sb >= 2)) )) {
-                
-                xr[sb][ss] *= pow(2.0, 0.25 * -8.0 *
-                                  gr_info->subblock_gain[(((sb*18)+ss) - cb_begin)/cb_width]);
-                xr[sb][ss] *= pow(2.0, 0.25 * -2.0 * (1.0+gr_info->scalefac_scale)
-                                  * (*scalefac)[ch].s[(((sb*18)+ss) - cb_begin)/cb_width][cb]);
-            }
-            else {   /* LONG block types 0,1,3 & 1st 2 subbands of switched blocks */
-                xr[sb][ss] *= pow(2.0, -0.5 * (1.0+gr_info->scalefac_scale)
-                                  * ((*scalefac)[ch].l[cb]
-                                     + gr_info->preflag * pretab[cb]));
+            //Do long/short dependent scaling operations
+            if (gr_info->window_switching_flag && (((gr_info->block_type == 2) && (gr_info->mixed_block_flag == 0)) || ((gr_info->block_type == 2) && gr_info->mixed_block_flag && (sb >= 2)))) {
+                xr[sb][ss] *= pow(2.0, 0.25 * -8.0 * gr_info->subblock_gain[(((sb * 18) + ss) - cb_begin) / cb_width]);
+                xr[sb][ss] *= pow(2.0, 0.25 * -2.0 * (1.0 + gr_info->scalefac_scale) * (*scalefac)[ch].s[(((sb * 18) + ss) - cb_begin) / cb_width][cb]);
+            } else {//LONG block types 0,1,3 & 1st 2 subbands of switched blocks
+                xr[sb][ss] *= pow(2.0, -0.5 * (1.0 + gr_info->scalefac_scale) * ((*scalefac)[ch].l[cb] + gr_info->preflag * pretab[cb]));
             }
             
-            /* Scale quantized value. */
+            //Scale quantized value
+            //直接超越函数计算，使用 pow 函数，缺点是比较慢；
+            //或者使用查表法，用空间换时间，但is的取值范围为 [0, 8191]，需要比较大空间；
+            //或者泰勒公式展开，精度越高，计算量越大；
+            //或者线性插值法，减少了乘法的计算量，但会有误差；
+            //或者使用查表法和线性插值法相结合的综合法：[0, 256]使用查表法，大于256的使用线性插值法，经过统计发现，is的取值小于256的占了99%
+            xr[sb][ss] *= pow((double)abs((int)is[sb][ss]), ((double)4.0 / 3.0));
             
-            sign = (is[sb][ss]<0) ? 1 : 0;
-            xr[sb][ss] *= pow( (double) abs(is[sb][ss]), ((double)4.0/3.0) );
-            if (sign) xr[sb][ss] = -xr[sb][ss];
+            sign = (is[sb][ss] < 0) ? 1 : 0;
+            if (sign) {
+                xr[sb][ss] = -xr[sb][ss];
+            }
         }
     }
 }
 
-
-void III_reorder(double xr[SBLIMIT][SSLIMIT], double ro[SBLIMIT][SSLIMIT], struct gr_info_s *gr_info, frame_params *fr_ps)
-{
+void III_reorder(double xr[SBLIMIT][SSLIMIT], double ro[SBLIMIT][SSLIMIT], struct gr_info_s *gr_info, frame_params *fr_ps) {
     int sfreq=fr_ps->header->sampling_frequency;
     int sfb, sfb_start, sfb_lines;
     int sb, ss, window, freq, src_line, des_line;
@@ -415,9 +404,7 @@ void III_reorder(double xr[SBLIMIT][SSLIMIT], double ro[SBLIMIT][SSLIMIT], struc
     }
 }
 
-
-void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], III_scalefac_t *scalefac, struct gr_info_s *gr_info, frame_params *fr_ps)
-{
+void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], III_scalefac_t *scalefac, struct gr_info_s *gr_info, frame_params *fr_ps) {
     int sfreq = fr_ps->header->sampling_frequency;
     int stereo = fr_ps->stereo;
     int ms_stereo = (fr_ps->header->mode == MPG_MD_JOINT_STEREO) &&
