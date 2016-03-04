@@ -143,15 +143,15 @@ int main(int argc, char**argv) {
                     
                     for (ch = 0; ch < fr_ps.stereo; ch++) {
                         double re[SBLIMIT][SSLIMIT];
-                        double hybridIn[SBLIMIT][SSLIMIT];//Hybrid filter input
-                        double hybridOut[SBLIMIT][SSLIMIT];//Hybrid filter out
-                        double polyPhaseIn[SBLIMIT];//PolyPhase Input
+                        double hybridIn[SBLIMIT][SSLIMIT];//hybrid filter input
+                        double hybridOut[SBLIMIT][SSLIMIT];//hybrid filter out
+                        double polyPhaseIn[SBLIMIT];//polyPhase input
                         
                         III_reorder(lr[ch], re, &(III_side_info.ch[ch].gr[gr]), &fr_ps);
 
                         III_antialias(re, hybridIn, &(III_side_info.ch[ch].gr[gr]), &fr_ps);//抗锯齿处理
 
-                        for (sb = 0; sb < SBLIMIT; sb++) {//IMDCT(Hybrid synthesis)
+                        for (sb = 0; sb < SBLIMIT; sb++) {//IMDCT(hybrid synthesis)
                             III_hybrid(hybridIn[sb], hybridOut[sb], sb, ch, &(III_side_info.ch[ch].gr[gr]), &fr_ps);
                         }
                         
@@ -168,7 +168,7 @@ int main(int argc, char**argv) {
                                 polyPhaseIn[sb] = hybridOut[sb][ss];
                             }
 
-                            clip += SubBandSynthesis(polyPhaseIn, ch, &((*pcm_sample)[ch][ss][0]));//子带合成
+                            clip += subBandSynthesis(polyPhaseIn, ch, &((*pcm_sample)[ch][ss][0]));//子带合成
                         }
                     }
 

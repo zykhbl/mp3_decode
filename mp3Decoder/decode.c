@@ -366,15 +366,16 @@ void III_reorder(double xr[SBLIMIT][SSLIMIT], double ro[SBLIMIT][SSLIMIT], struc
         }
     }
     
+    //因为在短窗的huffman编码时，将每个子带内的同一频率的三个窗采样数据均重新排列为同一窗，故在此必须恢复成原来的顺序
     if (gr_info->window_switching_flag && (gr_info->block_type == 2)) {
-        if (gr_info->mixed_block_flag) {//NO REORDER FOR LOW 2 SUBBANDS
-            for (sb = 0; sb < 2; sb++) {
+        if (gr_info->mixed_block_flag) {//Mix block
+            for (sb = 0; sb < 2; sb++) {//no reorder for low 2 subbands
                 for (ss = 0; ss < SSLIMIT; ss++) {
                     ro[sb][ss] = xr[sb][ss];
                 }
             }
             
-            //REORDERING FOR REST SWITCHED SHORT
+            //reordering for rest switched short
             for(sfb = 3, sfb_start = sfBandIndex[sfreq].s[3], sfb_lines = sfBandIndex[sfreq].s[4] - sfb_start; sfb < 13; sfb++, sfb_start = sfBandIndex[sfreq].s[sfb], (sfb_lines = sfBandIndex[sfreq].s[sfb + 1] - sfb_start)) {
                 for(window = 0; window < 3; window++) {
                     for(freq = 0; freq < sfb_lines; freq++) {
@@ -384,7 +385,7 @@ void III_reorder(double xr[SBLIMIT][SSLIMIT], double ro[SBLIMIT][SSLIMIT], struc
                     }
                 }
             }
-        } else {//pure short
+        } else {//Short block
             for(sfb = 0, sfb_start = 0, sfb_lines = sfBandIndex[sfreq].s[1]; sfb < 13; sfb++, sfb_start = sfBandIndex[sfreq].s[sfb], (sfb_lines = sfBandIndex[sfreq].s[sfb + 1] - sfb_start)) {
                 for(window = 0; window < 3; window++) {
                     for(freq = 0; freq < sfb_lines;freq++) {
@@ -395,7 +396,7 @@ void III_reorder(double xr[SBLIMIT][SSLIMIT], double ro[SBLIMIT][SSLIMIT], struc
                 }
             }
         }
-    } else {//long blocks
+    } else {//Long block（而长窗没有重新排列，故不需要再重新排列）
         for (sb = 0; sb < SBLIMIT; sb++) {
             for (ss = 0; ss < SSLIMIT; ss++) {
                 ro[sb][ss] = xr[sb][ss];
@@ -413,14 +414,16 @@ void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], 
     int i, j, sb, ss, ch, is_pos[576];
     double is_ratio[576];
     
-    //intialization
-    for (i = 0; i < 576; i++) {
+    for (i = 0; i < 576; i++) {//intialization
         is_pos[i] = 7;
     }
     
+    //mp3除了提供单声道及双声道之外，同时还提供强化立体声（intensity stereo）与 MS 立体声这两种立体声的编码方式
+    //不过这时候的左右声道就并不是单纯是由反量化所处理过后的值，所以须要经过这个立体声的处理过程来将编码过的立体声信号还原回左/右立体声信号
+    
     if ((stereo == 2) && i_stereo) {
         if (gr_info->window_switching_flag && (gr_info->block_type == 2)) {
-            if(gr_info->mixed_block_flag) {
+            if(gr_info->mixed_block_flag) {//Mix block
                 int max_sfb = 0;
                 
                 for (j = 0; j < 3; j++) {
@@ -501,7 +504,7 @@ void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], 
                         }
                     }
                 }
-            } else {
+            } else {//Short block type
                 for (j = 0; j < 3; j++) {
                     int sfbcnt;
                     sfbcnt = -1;
@@ -544,7 +547,7 @@ void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], 
                     }
                 }
             }
-        } else {
+        } else {//Long block type
             i = 31;
             ss = 17;
             sb = 0;
@@ -585,7 +588,7 @@ void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], 
         }
     }
     
-    for(ch = 0; ch < 2; ch++) {
+    for(ch = 0; ch < 2; ch++) {//初始化所有声道数据为全0
         for(sb = 0; sb < SBLIMIT; sb++) {
             for(ss = 0; ss < SSLIMIT; ss++) {
                 lr[ch][sb][ss] = 0;
@@ -593,7 +596,7 @@ void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], 
         }
     }
     
-    if (stereo == 2) {
+    if (stereo == 2) {//双声道
         for(sb = 0; sb < SBLIMIT; sb++) {
             for(ss = 0; ss < SSLIMIT; ss++) {
                 i = (sb * 18) + ss;
@@ -613,14 +616,13 @@ void III_stereo(double xr[2][SBLIMIT][SSLIMIT], double lr[2][SBLIMIT][SSLIMIT], 
                 }
             }
         }
-    } else {//mono , bypass xr[0][][] to lr[0][][]
+    } else {//单声道
         for(sb = 0; sb < SBLIMIT; sb++) {
             for(ss = 0; ss < SSLIMIT; ss++) {
                 lr[0][sb][ss] = xr[0][sb][ss];
             }
         }
     }
-    
 }
 
 double Ci[8] = {-0.6, -0.535, -0.33, -0.185, -0.095, -0.041, -0.0142, -0.0037};
@@ -634,7 +636,7 @@ void III_antialias(double xr[SBLIMIT][SSLIMIT], double hybridIn[SBLIMIT][SSLIMIT
     if (init) {
         int i;
         double sq;
-        for (i = 0; i  <8; i++) {
+        for (i = 0; i < 8; i++) {
             sq = sqrt(1.0 + Ci[i] * Ci[i]);
             cs[i] = 1.0 / sq;
             ca[i] = Ci[i] / sq;
@@ -642,8 +644,7 @@ void III_antialias(double xr[SBLIMIT][SSLIMIT], double hybridIn[SBLIMIT][SSLIMIT
         init = 0;
     }
     
-    //clear all inputs
-    for(sb = 0; sb < SBLIMIT; sb++) {
+    for(sb = 0; sb < SBLIMIT; sb++) {//clear all inputs
         for(ss = 0; ss < SSLIMIT; ss++) {
             hybridIn[sb][ss] = xr[sb][ss];
         }
@@ -652,6 +653,9 @@ void III_antialias(double xr[SBLIMIT][SSLIMIT], double hybridIn[SBLIMIT][SSLIMIT
     if  (gr_info->window_switching_flag && (gr_info->block_type == 2) && !gr_info->mixed_block_flag) {
         return;
     }
+    
+    //只在长窗口要使用，以减少因互相影响产生的噪声原因：使用长窗框得到较细的频谱分辨率时，同时会有混叠（Aliasing）的产生
+    //原始信号被分成 32 个子频带时，在频谱上可见邻近的子频带间有明显的重叠现象，而处于重叠区间的信号将会同时影响两个子频带
     
     if (gr_info->window_switching_flag && gr_info->mixed_block_flag && (gr_info->block_type == 2)) {
         sblim = 1;
@@ -695,13 +699,13 @@ void inv_mdct(double in[18], double out[36], int block_type) {
         
         //type 1
         for(i = 0; i < 18; i++) {
-            win[1][i] = sin(PI/36 * (i + 0.5));
+            win[1][i] = sin(PI / 36 * (i + 0.5));
         }
         for(i = 18; i < 24; i++) {
             win[1][i] = 1.0;
         }
         for(i = 24; i < 30; i++) {
-            win[1][i] = sin(PI/12 * (i + 0.5 - 18));
+            win[1][i] = sin(PI / 12 * (i + 0.5 - 18));
         }
         for(i = 30; i < 36; i++) {
             win[1][i] = 0.0;
@@ -789,7 +793,7 @@ void III_hybrid(double fsIn[SSLIMIT], double tsOut[SSLIMIT], int sb, int ch, str
     
     bt = (gr_info->window_switching_flag && gr_info->mixed_block_flag && (sb < 2)) ? 0 : gr_info->block_type;
     
-    inv_mdct( fsIn, rawout, bt);
+    inv_mdct(fsIn, rawout, bt);
     
     for(ss = 0; ss < SSLIMIT; ss++) {//overlap addition
         tsOut[ss] = rawout[ss] + prevblck[ch][sb][ss];
@@ -829,10 +833,10 @@ void read_syn_window(double window[HAN_SIZE]) {
     
     for (i = 0; i < 512; i += 4) {
         fgets(t, 150, fp);
-        sscanf(t,"D[%d] = %lf D[%d] = %lf D[%d] = %lf D[%d] = %lf\n", j, f, j + 1, f + 1, j + 2, f + 2, j + 3, f + 3);
+        sscanf(t, "D[%d] = %lf D[%d] = %lf D[%d] = %lf D[%d] = %lf\n", j, f, j + 1, f + 1, j + 2, f + 2, j + 3, f + 3);
         if (i == j[0]) {
             window[i] = f[0];
-            window[i +1 ] = f[1];
+            window[i + 1] = f[1];
             window[i + 2] = f[2];
             window[i + 3] = f[3];
         } else {
@@ -844,7 +848,7 @@ void read_syn_window(double window[HAN_SIZE]) {
     fclose(fp);
 }
 
-int SubBandSynthesis (double *bandPtr, int channel, short *samples) {
+int subBandSynthesis (double *bandPtr, int channel, short *samples) {
     register int i, j, k;
     register double *bufOffsetPtr, sum;
     static int init = 1;
@@ -857,13 +861,14 @@ int SubBandSynthesis (double *bandPtr, int channel, short *samples) {
     int clip = 0;//count & return how many samples clipped
     
     if (init) {
-        buf = (BB *) mem_alloc(sizeof(BB), "BB");
-        filter = (NN *) mem_alloc(sizeof(NN), "NN");
+        buf = (BB *)mem_alloc(sizeof(BB), "BB");
+        filter = (NN *)mem_alloc(sizeof(NN), "NN");
         create_syn_filter(*filter);
-        window = (double *) mem_alloc(sizeof(double) * HAN_SIZE, "WIN");
+        window = (double *)mem_alloc(sizeof(double) * HAN_SIZE, "WIN");
         read_syn_window(window);
         init = 0;
     }
+    
     //if (channel == 0)
     bufOffset[channel] = (bufOffset[channel] - 64) & 0x3ff;
     bufOffsetPtr = &((*buf)[channel][bufOffset[channel]]);
@@ -897,7 +902,7 @@ int SubBandSynthesis (double *bandPtr, int channel, short *samples) {
             }
         }
     }
-    return(clip);
+    return clip;
 }
 
 void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, frame_params *fr_ps, int done, FILE *outFile, unsigned long *psampFrames) {
@@ -911,7 +916,7 @@ void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, frame_params *fr_p
             for (j = 0; j < SBLIMIT; j++) {
                 (*psampFrames)++;
                 for (l = 0; l < stereo; l++) {
-                    if (!(k % 1600) && k) {
+                    if (!(k % 1600) && k) {//k > 0 且 k 整除 1600 时写入文件
                         fwrite(outsamp, 2, 1600, outFile);
                         k = 0;
                     }
