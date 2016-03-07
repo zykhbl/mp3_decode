@@ -743,10 +743,10 @@ void inv_mdct(double in[18], double out[36], int block_type) {
         out[i] = 0;
     }
     
-    if(block_type == 2){
+    if(block_type == 2) {
         N = 12;
-        for(i = 0; i < 3; i++){
-            for(p = 0; p < N; p++){
+        for(i = 0; i < 3; i++) {
+            for(p = 0; p < N; p++) {
                 sum = 0.0;
                 for(m = 0; m < N / 2; m++) {
                     sum += in[i + 3 * m] * cos(PI / (2 * N) * (2 * p + 1 + N / 2) * (2 * m + 1));
@@ -759,7 +759,7 @@ void inv_mdct(double in[18], double out[36], int block_type) {
         }
     } else {
         N = 36;
-        for(p = 0; p < N; p++){
+        for(p = 0; p < N; p++) {
             sum = 0.0;
             for(m = 0; m < N / 2; m++) {
                 sum += in[m] * COS[((2 * p + 1 + N / 2) * (2 * m + 1)) % (4 * 36)];
@@ -848,12 +848,12 @@ void read_syn_window(double window[HAN_SIZE]) {
     fclose(fp);
 }
 
-int subBandSynthesis (double *bandPtr, int channel, short *samples) {
+int subBandSynthesis(double *bandPtr, int channel, short *samples) {
     register int i, j, k;
     register double *bufOffsetPtr, sum;
     static int init = 1;
     typedef double NN[64][32];
-    static NN *filter;
+    static NN * filter;
     typedef double BB[2][2 * HAN_SIZE];
     static BB *buf;
     static int bufOffset[2] = {64, 64};
