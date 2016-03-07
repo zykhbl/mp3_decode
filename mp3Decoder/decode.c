@@ -388,7 +388,7 @@ void III_reorder(double xr[SBLIMIT][SSLIMIT], double ro[SBLIMIT][SSLIMIT], struc
         } else {//Short block
             for(sfb = 0, sfb_start = 0, sfb_lines = sfBandIndex[sfreq].s[1]; sfb < 13; sfb++, sfb_start = sfBandIndex[sfreq].s[sfb], (sfb_lines = sfBandIndex[sfreq].s[sfb + 1] - sfb_start)) {
                 for(window = 0; window < 3; window++) {
-                    for(freq = 0; freq < sfb_lines;freq++) {
+                    for(freq = 0; freq < sfb_lines; freq++) {
                         src_line = sfb_start * 3 + window * sfb_lines + freq;
                         des_line = (sfb_start * 3) + window + (freq * 3);
                         ro[des_line / SSLIMIT][des_line % SSLIMIT] = xr[src_line / SSLIMIT][src_line % SSLIMIT];
